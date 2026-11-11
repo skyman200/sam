@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { font-family: sans-serif;
+  padding: 16px; }
+input, textarea, button { width: 100%;
+  font-size: 18px; padding: 12px;
+  margin: 6px 0; box-sizing: border-box; }
+</style>
+</head>
+
+<body>
+<h2>내 스크랩</h2>
+<input id="topic" placeholder="주제">
+<input id="link" placeholder="링크">
+<textarea id="quote" rows="3"
+  placeholder="인용구"></textarea>
+<button onclick="save()">저장</button>
+<button onclick="mail()">내 메일로 받기</button>
+<p id="msg"></p>
+
+<script>
+// 아이디로 화면 요소를 찾습니다
+function el(id) {
+  return document.getElementById(id);
+}
+// 안내 글을 화면에 보여 줍니다
+function show(t) {
+  el('msg').textContent = t;
+}
+// 실패하면 이유를 보여 줍니다
+function fail(e) {
+  show('실패: ' + e.message);
+}
+
+// [저장]을 누르면 시트에 한 줄 추가합니다
+function save() {
+  show('저장 중입니다');
+  google.script.run
+    .withSuccessHandler(show)
+    .withFailureHandler(fail)
+    .addScrap(el('topic').value,
+      el('link').value, el('quote').value);
+}
+
+// [내 메일로 받기]를 누르면 메일을 보냅니다
+function mail() {
+  show('메일 보내는 중입니다');
+  google.script.run
+    .withSuccessHandler(show)
+    .withFailureHandler(fail)
+    .mailList();
+}
+</script>
+</body>
+</html>

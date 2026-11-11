@@ -1,0 +1,197 @@
+[
+  {
+    "lecture": "7-1",
+    "file": "code/ep1/Code.gs",
+    "kind": "gs",
+    "purpose": "스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp)",
+    "paste_to": "Code.gs",
+    "requires": [],
+    "lines": 54
+  },
+  {
+    "lecture": "7-1",
+    "file": "code/ep1/Index.html",
+    "kind": "html",
+    "purpose": "스크랩 웹앱 화면(저장·내 메일로 받기)",
+    "paste_to": "Index.html",
+    "requires": [
+      "code/ep1/Code.gs"
+    ],
+    "lines": 57
+  },
+  {
+    "lecture": "7-1",
+    "file": "code/ep1/Feed.gs",
+    "kind": "gs",
+    "purpose": "RSS 새 글 5건을 스크랩 탭에 추가(importFeed)",
+    "paste_to": "Feed.gs",
+    "requires": [
+      "code/ep1/Code.gs",
+      "site/practice/feed.xml"
+    ],
+    "lines": 65
+  },
+  {
+    "lecture": "7-1",
+    "file": "code/ep1/Report.gs",
+    "kind": "gs",
+    "purpose": "스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)",
+    "paste_to": "Report.gs",
+    "requires": [
+      "code/ep1/Code.gs"
+    ],
+    "lines": 69
+  },
+  {
+    "lecture": "7-1",
+    "file": "site/practice/scrap_sample.csv",
+    "kind": "csv",
+    "purpose": "스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)",
+    "paste_to": "시트의 \"스크랩\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 7
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Summary.gs",
+    "kind": "gs",
+    "purpose": "셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary",
+    "paste_to": "Summary.gs",
+    "requires": [],
+    "lines": 49
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/SamSummary.gs",
+    "kind": "gs",
+    "purpose": "키 없이 쓰는 셀 함수 SAM_SUMMARY(수업용 Cloudflare API, 캐시 사용)와 testSamSummary",
+    "paste_to": "SamSummary.gs",
+    "requires": [],
+    "lines": 65
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Pdf.gs",
+    "kind": "gs",
+    "purpose": "시트를 PDF로 내 드라이브에 저장(savePdf)",
+    "paste_to": "Pdf.gs",
+    "requires": [],
+    "lines": 11
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Trigger.gs",
+    "kind": "gs",
+    "purpose": "매일 8시대 mailList 자동 실행 트리거(setTrigger)",
+    "paste_to": "Trigger.gs",
+    "requires": [
+      "code/ep1/Code.gs"
+    ],
+    "lines": 21
+  },
+  {
+    "lecture": "7-2",
+    "file": "site/practice/sample_notes.csv",
+    "kind": "csv",
+    "purpose": "AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸)",
+    "paste_to": "시트의 새 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 11
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Code.gs",
+    "kind": "gs",
+    "purpose": "퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong)",
+    "paste_to": "Code.gs",
+    "requires": [],
+    "lines": 46
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Index.html",
+    "kind": "html",
+    "purpose": "퀴즈 웹앱 화면",
+    "paste_to": "Index.html",
+    "requires": [
+      "code/ep3/Code.gs"
+    ],
+    "lines": 82
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Exam.gs",
+    "kind": "gs",
+    "purpose": "시험일 D-14·D-7·D-1을 캘린더에 등록(addExam)",
+    "paste_to": "Exam.gs",
+    "requires": [],
+    "lines": 36
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Notes.gs",
+    "kind": "gs",
+    "purpose": "오답노트 탭을 \"복습 자료\" 문서 하나로 만들기(makeReviewDoc)",
+    "paste_to": "Notes.gs",
+    "requires": [
+      "code/ep3/Code.gs"
+    ],
+    "lines": 52
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/sample_quiz.csv",
+    "kind": "csv",
+    "purpose": "Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)",
+    "paste_to": "시트의 \"Quiz\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 11
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/sample_exam.csv",
+    "kind": "csv",
+    "purpose": "시험 탭 연습 데이터(과목·시험일)",
+    "paste_to": "시트의 \"시험\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 2
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Slides.gs",
+    "kind": "gs",
+    "purpose": "대본 탭을 구글 슬라이드로 자동 생성(makeSlides)",
+    "paste_to": "Slides.gs",
+    "requires": [],
+    "lines": 67
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Script.gs",
+    "kind": "gs",
+    "purpose": "대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc)",
+    "paste_to": "Script.gs",
+    "requires": [
+      "code/ep4/Slides.gs"
+    ],
+    "lines": 53
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Keys.gs",
+    "kind": "gs",
+    "purpose": "PropertiesService 복습 3줄(checkKey)",
+    "paste_to": "Keys.gs",
+    "requires": [],
+    "lines": 10
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/sample_script.csv",
+    "kind": "csv",
+    "purpose": "발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)",
+    "paste_to": "시트의 \"대본\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 9
+  }
+]

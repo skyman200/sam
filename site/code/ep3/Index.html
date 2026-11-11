@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html><head><base target="_top">
+<style>
+body{font-family:sans-serif;padding:16px}
+button{display:block;width:100%;
+  margin:8px 0;padding:14px;font-size:18px}
+#msg{font-size:20px}
+</style></head><body>
+<h3 id="q">불러오는 중</h3>
+<div id="ch"></div><p id="msg"></p>
+
+<button id="go" onclick="goNext()"
+  style="display:none">다음 문제</button>
+<script>
+const $ = id => document.getElementById(id);
+let quiz = [], n = 0, score = 0;
+google.script.run
+  .withSuccessHandler(start)
+  .withFailureHandler(fail)
+  .getQuiz();
+
+// 오류가 나면 문제 자리에 이유를 보여 줍니다
+function fail(e) {
+  $('q').textContent = '오류: ' + e.message;
+}
+// 문제를 받으면 첫 문제부터 시작합니다
+function start(data) {
+  quiz = data;
+  if (quiz.length > 0) return show();
+  fail({ message: 'Quiz 탭에 문제가 없습니다' });
+}
+
+// 지금 문제와 보기 버튼을 화면에 그립니다
+function show() {
+  const it = quiz[n];
+  $('q').textContent = (n + 1) + '. ' + it.q;
+  $('msg').textContent = '';
+  $('go').style.display = 'none';
+  $('ch').innerHTML = '';
+  it.ch.forEach((c, k) => addBtn(c, k + 1));
+}
+
+// 보기 버튼 하나를 만들어 붙입니다
+function addBtn(text, no) {
+  const b = document.createElement('button');
+  b.textContent = no + ') ' + text;
+  b.onclick = () => pick(no);
+  $('ch').appendChild(b);
+}
+
+// 보기를 누르면 맞았는지 알려 줍니다
+function pick(no) {
+  const it = quiz[n];
+  document.querySelectorAll('#ch button')
+    .forEach(b => { b.disabled = true; });
+  if (no === it.ans) {
+    score++;
+    $('msg').textContent = '정답. ' + it.exp;
+  } else { wrong(it, no); }
+  $('go').style.display = 'block';
+}
+
+// 다음 문제로 넘어가고, 끝나면 점수를 보여 줌
+function goNext() {
+  n++;
+  if (n < quiz.length) return show();
+  $('q').textContent = '점수 ' + score
+    + ' / ' + quiz.length;
+  $('ch').innerHTML = '';
+  $('msg').textContent = '틀린 문제는 오답노트에';
+  $('go').style.display = 'none';
+}
+
+// 오답이면 정답을 알리고 시트에 저장합니다
+function wrong(it, no) {
+  $('msg').textContent = '오답. 정답은 '
+    + it.ans + '번. ' + it.exp;
+  google.script.run.withFailureHandler(fail)
+    .saveWrong(n, no);
+}
+</script>
+</body></html>

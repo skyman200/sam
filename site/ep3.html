@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>9주차 1강 소크라테스 튜터와 폰 CBT 퀴즈</title><style>
+:root{--red:#D6232B;--dred:#8E1B20;--ink:#1A1A1A;--gray:#555;--line:#1A1A1A;--bg:#fff;--soft:#F3F3F3;--dot:#D4D4D4}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;
+background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+header.top{background:var(--ink);color:#fff;padding:10px 20px;font-size:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header.top a{color:#fff;text-decoration:none;border-bottom:1px solid var(--red)}
+header.top b{background:var(--red);padding:2px 8px}
+main{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:40px;line-height:1.25;margin:8px 0 6px;border-left:12px solid var(--red);padding-left:14px}
+h2{font-size:26px;margin:44px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.lead{color:var(--gray);font-size:18px;background:#fff;padding:4px 0}
+.card{background:#fff;border:1px solid var(--ink);padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card h3{margin:0 0 4px;font-size:20px}
+.tag{display:inline-block;background:var(--red);color:#fff;font-size:13px;padding:1px 8px;margin-right:6px}
+.tag.k{background:var(--ink)}
+.file{background:#fff;border:1px solid var(--ink);margin:22px 0}
+.file>.bar{display:flex;gap:8px;align-items:center;background:var(--soft);border-bottom:1px solid var(--ink);padding:8px 12px;flex-wrap:wrap}
+.bar .n{font-weight:700;font-size:18px}.bar .p{color:var(--gray);font-size:14px;flex:1;min-width:200px}
+button.copy,a.dl{font:inherit;font-size:14px;background:var(--red);color:#fff;border:0;padding:6px 14px;cursor:pointer;text-decoration:none}
+button.copy.done{background:var(--ink)}
+pre{margin:0;padding:14px 16px;background:#1A1A1A;color:#F2F2F2;overflow:auto;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:560px}
+.note{border-left:6px solid var(--red);background:#fff;padding:8px 14px;margin:14px 0;font-size:16px}
+ol.steps li{margin:6px 0}
+footer{color:var(--gray);font-size:13px;margin-top:50px}
+code.i{background:var(--soft);padding:1px 5px}
+</style></head><body>
+<header class="top"><b>SAM</b><a href="index.html">처음</a>
+<a href="ep1.html">7-1</a><a href="ep2.html">7-2</a><a href="ep3.html">9-1</a><a href="ep4.html">9-2</a></header>
+<main><h1>9주차 1강 · 소크라테스 튜터와 폰 CBT 퀴즈</h1>
+<p class="lead">폰에서 푸는 퀴즈 웹앱을 만들고, 시험 일정을 내 캘린더에 넣습니다.</p>
+<div class="note"><b>따라 하는 순서</b></div>
+<ol class="steps">
+<li>구글 시트를 새로 만든다 (개인 구글 계정 사용).</li>
+<li>메뉴 <code class="i">확장 프로그램 &gt; Apps Script</code>를 연다.</li>
+<li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
+<li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
+</ol>
+<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong)</li><li><code class="i">Index.html</code> 퀴즈 웹앱 화면</li><li><code class="i">Exam.gs</code> 시험일 D-14·D-7·D-1을 캘린더에 등록(addExam)</li><li><code class="i">Notes.gs</code> 오답노트 탭을 &quot;복습 자료&quot; 문서 하나로 만들기(makeReviewDoc)</li><li><code class="i">sample_quiz.csv</code> Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)</li><li><code class="i">sample_exam.csv</code> 시험 탭 연습 데이터(과목·시험일)</li></ul></div>
+<div class="file" id="fep3_0"><div class="bar"><span class="n">Code.gs</span>
+<span class="p">퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong) · 붙일 곳: Code.gs</span>
+<button class="copy" data-t="cep3_0">복사</button><a class="dl" href="code/ep3/Code.gs" download>받기</a></div>
+<pre id="cep3_0">// Code.gs : CBT 퀴즈 웹앱 (9주차 1강)
+const QUIZ = &#x27;Quiz&#x27;;
+const WRONG = &#x27;오답노트&#x27;;
+
+// 웹앱 주소를 열면 Index 화면을 보여 줍니다
+function doGet() {
+  return HtmlService
+    .createHtmlOutputFromFile(&#x27;Index&#x27;)
+    .setTitle(&#x27;CBT 퀴즈&#x27;)
+    .addMetaTag(&#x27;viewport&#x27;,
+    &#x27;width=device-width, initial-scale=1&#x27;);
+}
+
+// &#x27;Quiz&#x27; 탭의 문제를 모두 읽어 목록으로 돌려줍니다
+function getQuiz() {
+  const sh = SpreadsheetApp.getActive()
+    .getSheetByName(QUIZ);
+  if (!sh) throw new Error(&#x27;Quiz 탭이 없습니다&#x27;);
+  return sh.getDataRange().getValues()
+    .map((r, k) =&gt; (k &gt; 0 &amp;&amp; r[0] !== &#x27;&#x27;)
+      ? toItem(r, k + 1) : null)
+    .filter(Boolean);
+}
+
+// 시트 한 줄을 문제 한 개로 바꿉니다
+function toItem(r, row) {
+  const ans = Number(r[5]);
+  if (![1, 2, 3, 4].includes(ans)) {
+    throw new Error(row + &#x27;행 F열은 1~4 숫자만&#x27;);
+  }
+  const ch = r.slice(1, 5).map(String);
+  return { q: String(r[0]), ch: ch,
+    ans: ans, exp: String(r[6]) };
+}
+
+// 틀린 문제를 &#x27;오답노트&#x27; 탭에 한 줄 저장합니다
+function saveWrong(i, pick) {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName(WRONG)
+    || ss.insertSheet(WRONG);
+  const it = getQuiz()[i];
+  if (!it) throw new Error(&#x27;없는 문제 번호&#x27;);
+  sh.appendRow([new Date(), it.q,
+    pick, it.ans, it.exp]);
+  return true;
+}
+</pre></div>
+<div class="file" id="fep3_1"><div class="bar"><span class="n">Index.html</span>
+<span class="p">퀴즈 웹앱 화면 · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep3/Code.gs</span></span>
+<button class="copy" data-t="cep3_1">복사</button><a class="dl" href="code/ep3/Index.html" download>받기</a></div>
+<pre id="cep3_1">&lt;!DOCTYPE html&gt;
+&lt;html&gt;&lt;head&gt;&lt;base target=&quot;_top&quot;&gt;
+&lt;style&gt;
+body{font-family:sans-serif;padding:16px}
+button{display:block;width:100%;
+  margin:8px 0;padding:14px;font-size:18px}
+#msg{font-size:20px}
+&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
+&lt;h3 id=&quot;q&quot;&gt;불러오는 중&lt;/h3&gt;
+&lt;div id=&quot;ch&quot;&gt;&lt;/div&gt;&lt;p id=&quot;msg&quot;&gt;&lt;/p&gt;
+
+&lt;button id=&quot;go&quot; onclick=&quot;goNext()&quot;
+  style=&quot;display:none&quot;&gt;다음 문제&lt;/button&gt;
+&lt;script&gt;
+const $ = id =&gt; document.getElementById(id);
+let quiz = [], n = 0, score = 0;
+google.script.run
+  .withSuccessHandler(start)
+  .withFailureHandler(fail)
+  .getQuiz();
+
+// 오류가 나면 문제 자리에 이유를 보여 줍니다
+function fail(e) {
+  $(&#x27;q&#x27;).textContent = &#x27;오류: &#x27; + e.message;
+}
+// 문제를 받으면 첫 문제부터 시작합니다
+function start(data) {
+  quiz = data;
+  if (quiz.length &gt; 0) return show();
+  fail({ message: &#x27;Quiz 탭에 문제가 없습니다&#x27; });
+}
+
+// 지금 문제와 보기 버튼을 화면에 그립니다
+function show() {
+  const it = quiz[n];
+  $(&#x27;q&#x27;).textContent = (n + 1) + &#x27;. &#x27; + it.q;
+  $(&#x27;msg&#x27;).textContent = &#x27;&#x27;;
+  $(&#x27;go&#x27;).style.display = &#x27;none&#x27;;
+  $(&#x27;ch&#x27;).innerHTML = &#x27;&#x27;;
+  it.ch.forEach((c, k) =&gt; addBtn(c, k + 1));
+}
+
+// 보기 버튼 하나를 만들어 붙입니다
+function addBtn(text, no) {
+  const b = document.createElement(&#x27;button&#x27;);
+  b.textContent = no + &#x27;) &#x27; + text;
+  b.onclick = () =&gt; pick(no);
+  $(&#x27;ch&#x27;).appendChild(b);
+}
+
+// 보기를 누르면 맞았는지 알려 줍니다
+function pick(no) {
+  const it = quiz[n];
+  document.querySelectorAll(&#x27;#ch button&#x27;)
+    .forEach(b =&gt; { b.disabled = true; });
+  if (no === it.ans) {
+    score++;
+    $(&#x27;msg&#x27;).textContent = &#x27;정답. &#x27; + it.exp;
+  } else { wrong(it, no); }
+  $(&#x27;go&#x27;).style.display = &#x27;block&#x27;;
+}
+
+// 다음 문제로 넘어가고, 끝나면 점수를 보여 줌
+function goNext() {
+  n++;
+  if (n &lt; quiz.length) return show();
+  $(&#x27;q&#x27;).textContent = &#x27;점수 &#x27; + score
+    + &#x27; / &#x27; + quiz.length;
+  $(&#x27;ch&#x27;).innerHTML = &#x27;&#x27;;
+  $(&#x27;msg&#x27;).textContent = &#x27;틀린 문제는 오답노트에&#x27;;
+  $(&#x27;go&#x27;).style.display = &#x27;none&#x27;;
+}
+
+// 오답이면 정답을 알리고 시트에 저장합니다
+function wrong(it, no) {
+  $(&#x27;msg&#x27;).textContent = &#x27;오답. 정답은 &#x27;
+    + it.ans + &#x27;번. &#x27; + it.exp;
+  google.script.run.withFailureHandler(fail)
+    .saveWrong(n, no);
+}
+&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;
+</pre></div>
+<div class="file" id="fep3_2"><div class="bar"><span class="n">Exam.gs</span>
+<span class="p">시험일 D-14·D-7·D-1을 캘린더에 등록(addExam) · 붙일 곳: Exam.gs</span>
+<button class="copy" data-t="cep3_2">복사</button><a class="dl" href="code/ep3/Exam.gs" download>받기</a></div>
+<pre id="cep3_2">// Exam.gs : 시험일 D-14, D-7, D-1 을 캘린더에 등록
+// 새 파일로 만듭니다. Code.gs와 이름이 겹치지 않습니다
+const EXAM = &#x27;시험&#x27;;
+const DAYS = [14, 7, 1];
+
+// &#x27;시험&#x27; 탭 2행의 과목·시험일로 일정을 만듭니다
+function addExam() {
+  const sh = SpreadsheetApp.getActive()
+    .getSheetByName(EXAM);
+  if (!sh) throw new Error(&#x27;시험 탭이 없습니다&#x27;);
+  const name = sh.getRange(&#x27;A2&#x27;).getValue();
+  const day = sh.getRange(&#x27;B2&#x27;).getValue();
+  if (!name) throw new Error(&#x27;A2에 과목명을 쓰세요&#x27;);
+  if (!(day instanceof Date)) {
+    throw new Error(&#x27;B2는 2026-12-14처럼 날짜로&#x27;);
+  }
+
+  const c = CalendarApp.getDefaultCalendar();
+  DAYS.forEach(n =&gt; {
+    const d = new Date(day.getTime());
+    d.setDate(d.getDate() - n);
+    addOnce(c, &#x27;D-&#x27; + n + &#x27; &#x27; + name, d);
+  });
+}
+
+// 같은 제목이 그날 없을 때만 종일 일정을 만듭니다
+function addOnce(c, title, d) {
+  const old = c.getEventsForDay(d)
+    .filter(e =&gt; e.getTitle() === title);
+  if (old.length &gt; 0) {
+    console.log(title + &#x27; 이미 있음, 건너뜀&#x27;);
+    return;
+  }
+  c.createAllDayEvent(title, d);
+  console.log(title + &#x27; 등록함&#x27;);
+}
+</pre></div>
+<div class="file" id="fep3_3"><div class="bar"><span class="n">Notes.gs</span>
+<span class="p">오답노트 탭을 &quot;복습 자료&quot; 문서 하나로 만들기(makeReviewDoc) · 붙일 곳: Notes.gs <span class="tag k">먼저 필요: code/ep3/Code.gs</span></span>
+<button class="copy" data-t="cep3_3">복사</button><a class="dl" href="code/ep3/Notes.gs" download>받기</a></div>
+<pre id="cep3_3">// Notes.gs : 오답노트 탭을 복습 자료 문서로 만들기
+// Code.gs의 WRONG 상수를 쓰므로 Code.gs가 먼저 있어야 합니다
+const REVIEW_TITLE = &#x27;복습 자료&#x27;;
+
+// 오답노트 전체를 &#x27;복습 자료&#x27; 문서 하나로 만듭니다
+function makeReviewDoc() {
+  const rows = readWrong_();
+  const zone = Session.getScriptTimeZone();
+  const today = Utilities.formatDate(
+    new Date(), zone, &#x27;yyyy-MM-dd&#x27;);
+
+  const doc = DocumentApp.create(
+    REVIEW_TITLE + &#x27; &#x27; + today);
+  const body = doc.getBody();
+  const H = DocumentApp.ParagraphHeading;
+  body.getParagraphs()[0]
+    .setText(REVIEW_TITLE)
+    .setHeading(H.HEADING1);
+  body.appendParagraph(&#x27;틀린 문제 &#x27;
+    + rows.length + &#x27;개 (&#x27; + today + &#x27;)&#x27;);
+
+  rows.forEach(function (r, i) {
+    body.appendParagraph(
+      (i + 1) + &#x27;. &#x27; + r[1])
+      .setHeading(H.HEADING3);
+    body.appendParagraph(&#x27;내 답: &#x27; + r[2]
+      + &#x27;번 / 정답: &#x27; + r[3] + &#x27;번&#x27;);
+    body.appendParagraph(&#x27;해설: &#x27; + r[4]);
+  });
+
+  const url = doc.getUrl();
+  doc.saveAndClose();
+  Logger.log(&#x27;복습 자료 완성: &#x27; + url);
+  return url;
+}
+
+// 오답노트 탭에서 틀린 문제 줄만 읽어 옵니다
+function readWrong_() {
+  const sh = SpreadsheetApp.getActive()
+    .getSheetByName(WRONG);
+  if (!sh) {
+    throw new Error(&#x27;오답노트 탭이 없습니다&#x27;);
+  }
+  const rows = sh.getDataRange().getValues()
+    .filter(function (r) {
+      return r[1] !== &#x27;&#x27; &amp;&amp; r[0] !== &#x27;날짜&#x27;;
+    });
+  if (rows.length === 0) {
+    throw new Error(&#x27;오답노트에 기록이 없습니다&#x27;);
+  }
+  return rows;
+}
+</pre></div>
+<div class="file" id="fep3_4"><div class="bar"><span class="n">sample_quiz.csv</span>
+<span class="p">Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식) · 붙일 곳: 시트의 &quot;Quiz&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep3_4">복사</button><a class="dl" href="code/ep3/sample_quiz.csv" download>받기</a></div>
+<pre id="cep3_4">﻿문제,보기1,보기2,보기3,보기4,정답,해설
+표준 기압에서 물이 끓는 온도는 몇 도일까요?,90도,95도,100도,110도,3,1기압에서 물은 섭씨 100도에서 끓습니다.
+한글을 만든 왕은 누구일까요?,태조,세종대왕,정조,영조,2,세종대왕이 1443년에 만들고 1446년에 반포했습니다.
+지구에서 가장 넓은 바다(대양)는 무엇일까요?,대서양,인도양,북극해,태평양,4,태평양이 지구에서 가장 넓은 대양입니다.
+1바이트는 몇 비트일까요?,8비트,4비트,16비트,32비트,1,1바이트는 8비트입니다.
+웹 주소 https의 s는 무엇을 뜻할까요?,빠름(Speed),보안(Secure),서버(Server),공유(Share),2,&quot;s는 Secure의 약자로, 통신 내용을 암호로 감쌉니다.&quot;
+다음 중 비밀번호로 가장 안전한 것은?,123456,내 생일 8자리,내 이름과 학번,12자 이상 영문·숫자·기호를 섞은 글,4,길고 여러 종류를 섞을수록 알아맞히기 어렵습니다.
+손을 씻을 때 비누로 몇 초 이상 문지르는 것이 권장될까요?,5초,10초,30초,3분,3,비누로 30초 이상 꼼꼼히 씻는 것이 권장됩니다.
+성인에게 하루 권장되는 수면 시간은 대략 얼마일까요?,3~4시간,5시간 미만,12시간 이상,7~9시간,4,성인은 보통 하루 7~9시간 자는 것이 권장됩니다.
+혈액을 온몸으로 내보내는 기관은 무엇일까요?,폐,심장,간,위,2,심장이 펌프처럼 혈액을 온몸으로 보냅니다.
+PDF에서 PDF는 무엇의 약자일까요?,Public Data File,Print Draft Form,Personal Document File,Portable Document Format,4,PDF는 Portable Document Format의 약자입니다.
+</pre></div>
+<div class="file" id="fep3_5"><div class="bar"><span class="n">sample_exam.csv</span>
+<span class="p">시험 탭 연습 데이터(과목·시험일) · 붙일 곳: 시트의 &quot;시험&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep3_5">복사</button><a class="dl" href="code/ep3/sample_exam.csv" download>받기</a></div>
+<pre id="cep3_5">﻿과목,시험일
+생활 속의 AI,2026-12-14
+</pre></div>
+<footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
+</main><script>
+document.querySelectorAll('button.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=document.getElementById(b.dataset.t).textContent;
+function ok(){b.textContent='복사됨';b.classList.add('done');setTimeout(function(){b.textContent='복사';b.classList.remove('done')},1500)}
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok)}else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}
+})});
+</script></body></html>

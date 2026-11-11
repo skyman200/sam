@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>9주차 2강 발표 과제를 말로 시켜 만든다</title><style>
+:root{--red:#D6232B;--dred:#8E1B20;--ink:#1A1A1A;--gray:#555;--line:#1A1A1A;--bg:#fff;--soft:#F3F3F3;--dot:#D4D4D4}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;
+background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+header.top{background:var(--ink);color:#fff;padding:10px 20px;font-size:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header.top a{color:#fff;text-decoration:none;border-bottom:1px solid var(--red)}
+header.top b{background:var(--red);padding:2px 8px}
+main{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:40px;line-height:1.25;margin:8px 0 6px;border-left:12px solid var(--red);padding-left:14px}
+h2{font-size:26px;margin:44px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.lead{color:var(--gray);font-size:18px;background:#fff;padding:4px 0}
+.card{background:#fff;border:1px solid var(--ink);padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card h3{margin:0 0 4px;font-size:20px}
+.tag{display:inline-block;background:var(--red);color:#fff;font-size:13px;padding:1px 8px;margin-right:6px}
+.tag.k{background:var(--ink)}
+.file{background:#fff;border:1px solid var(--ink);margin:22px 0}
+.file>.bar{display:flex;gap:8px;align-items:center;background:var(--soft);border-bottom:1px solid var(--ink);padding:8px 12px;flex-wrap:wrap}
+.bar .n{font-weight:700;font-size:18px}.bar .p{color:var(--gray);font-size:14px;flex:1;min-width:200px}
+button.copy,a.dl{font:inherit;font-size:14px;background:var(--red);color:#fff;border:0;padding:6px 14px;cursor:pointer;text-decoration:none}
+button.copy.done{background:var(--ink)}
+pre{margin:0;padding:14px 16px;background:#1A1A1A;color:#F2F2F2;overflow:auto;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:560px}
+.note{border-left:6px solid var(--red);background:#fff;padding:8px 14px;margin:14px 0;font-size:16px}
+ol.steps li{margin:6px 0}
+footer{color:var(--gray);font-size:13px;margin-top:50px}
+code.i{background:var(--soft);padding:1px 5px}
+</style></head><body>
+<header class="top"><b>SAM</b><a href="index.html">처음</a>
+<a href="ep1.html">7-1</a><a href="ep2.html">7-2</a><a href="ep3.html">9-1</a><a href="ep4.html">9-2</a></header>
+<main><h1>9주차 2강 · 발표 과제를 말로 시켜 만든다</h1>
+<p class="lead">발표 대본에서 슬라이드를 자동으로 만들고, 키를 안전하게 보관하는 법을 익힙니다.</p>
+<div class="note"><b>따라 하는 순서</b></div>
+<ol class="steps">
+<li>구글 시트를 새로 만든다 (개인 구글 계정 사용).</li>
+<li>메뉴 <code class="i">확장 프로그램 &gt; Apps Script</code>를 연다.</li>
+<li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
+<li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
+</ol>
+<div class="note">이 강의 파일: <ul><li><code class="i">Slides.gs</code> 대본 탭을 구글 슬라이드로 자동 생성(makeSlides)</li><li><code class="i">Script.gs</code> 대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc)</li><li><code class="i">Keys.gs</code> PropertiesService 복습 3줄(checkKey)</li><li><code class="i">sample_script.csv</code> 발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)</li></ul></div>
+<div class="file" id="fep4_0"><div class="bar"><span class="n">Slides.gs</span>
+<span class="p">대본 탭을 구글 슬라이드로 자동 생성(makeSlides) · 붙일 곳: Slides.gs</span>
+<button class="copy" data-t="cep4_0">복사</button><a class="dl" href="code/ep4/Slides.gs" download>받기</a></div>
+<pre id="cep4_0">// Slides.gs : &#x27;대본&#x27; 탭 → 구글 슬라이드
+const SHEET_NAME = &#x27;대본&#x27;;
+const MAX_SLIDES = 20;
+const MAIN_COLOR = &#x27;#D6232B&#x27;; // 명세서 메인색
+
+// 시트를 열면 &#x27;발표 도우미&#x27; 메뉴를 만듭니다
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu(&#x27;발표 도우미&#x27;)
+    .addItem(&#x27;슬라이드 만들기&#x27;, &#x27;makeSlides&#x27;)
+    .addToUi();
+}
+
+// 대본 탭의 줄마다 슬라이드를 한 장씩 만듭니다
+function makeSlides() {
+  const ss = SpreadsheetApp
+    .getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    throw new Error(&#x27;대본 탭이 없습니다.&#x27;);
+  }
+  const rows = sh.getDataRange().getValues();
+  rows.shift(); // 1행(머리글)은 뺀다
+  const items = rows.filter(r =&gt; r[0]);
+
+  if (items.length === 0) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+  if (items.length &gt; MAX_SLIDES) {
+    throw new Error(&#x27;20장 이하로 줄이세요.&#x27;);
+  }
+  const deck = SlidesApp.create(
+    &#x27;발표 초안 - &#x27; + ss.getName());
+  const blank = deck.getSlides()[0];
+  items.forEach(r =&gt; addSlide(deck, r));
+
+  blank.remove(); // 빈 첫 장 지우기
+  const url = deck.getUrl();
+  console.log(&#x27;완성: &#x27; + url);
+  ss.toast(&#x27;내 드라이브에 저장했습니다&#x27;, &#x27;완성&#x27;, 10);
+  return url;
+}
+
+// 슬라이드 한 장에 제목·내용·발표자 노트를 채웁니다
+function addSlide(deck, r) {
+  const s = deck.appendSlide(SlidesApp
+    .PredefinedLayout.TITLE_AND_BODY);
+  const T = SlidesApp.PlaceholderType;
+
+  const title = s.getPlaceholder(T.TITLE);
+  const body = s.getPlaceholder(T.BODY);
+  if (!title || !body) {
+    throw new Error(&#x27;자리표시자를 못 찾았습니다.&#x27;);
+  }
+  const t = title.asShape().getText()
+    .setText(String(r[0]));
+  t.getTextStyle()
+    .setForegroundColor(MAIN_COLOR);
+
+  const text = String(r[1]).split(&#x27;/&#x27;)
+    .map(v =&gt; v.trim()).join(&#x27;\n&#x27;);
+  body.asShape().getText().setText(text);
+  if (r[2]) {
+    s.getNotesPage().getSpeakerNotesShape()
+      .getText().setText(String(r[2]));
+  }
+}
+</pre></div>
+<div class="file" id="fep4_1"><div class="bar"><span class="n">Script.gs</span>
+<span class="p">대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc) · 붙일 곳: Script.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs</span></span>
+<button class="copy" data-t="cep4_1">복사</button><a class="dl" href="code/ep4/Script.gs" download>받기</a></div>
+<pre id="cep4_1">// Script.gs : &#x27;대본&#x27; 탭을 발표 대본 문서로 내보내기
+// Slides.gs의 SHEET_NAME 을 쓰므로
+// Slides.gs가 먼저 있어야 합니다
+
+// 대본 탭의 제목·핵심·발표할 말을 문서 한 개로 만듭니다
+function makeScriptDoc() {
+  const ss = SpreadsheetApp
+    .getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    throw new Error(&#x27;대본 탭이 없습니다.&#x27;);
+  }
+  const rows = sh.getDataRange().getValues();
+  rows.shift(); // 1행(머리글)은 뺀다
+  const items = rows.filter(r =&gt; r[0]);
+  if (items.length === 0) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+
+  const doc = DocumentApp.create(
+    &#x27;발표 대본 - &#x27; + ss.getName());
+  const body = doc.getBody();
+  const H = DocumentApp.ParagraphHeading;
+  const G = DocumentApp.GlyphType;
+  body.getParagraphs()[0]
+    .setText(ss.getName())
+    .setHeading(H.TITLE);
+
+  items.forEach((r, i) =&gt; {
+    body.appendParagraph(
+      (i + 1) + &#x27;. &#x27; + r[0])
+      .setHeading(H.HEADING2);
+    pointsOf_(r[1]).forEach(p =&gt; {
+      body.appendListItem(p)
+        .setGlyphType(G.BULLET);
+    });
+    if (r[2]) {
+      body.appendParagraph(&#x27;발표할 말: &#x27; + r[2]);
+    }
+  });
+
+  const url = doc.getUrl();
+  doc.saveAndClose();
+  console.log(&#x27;대본 완성: &#x27; + url);
+  return url;
+}
+
+// B열 글을 &#x27;/&#x27; 기준으로 잘라 핵심 문장 목록으로
+function pointsOf_(cell) {
+  return String(cell).split(&#x27;/&#x27;)
+    .map(v =&gt; v.trim())
+    .filter(v =&gt; v !== &#x27;&#x27;);
+}
+</pre></div>
+<div class="file" id="fep4_2"><div class="bar"><span class="n">Keys.gs</span>
+<span class="p">PropertiesService 복습 3줄(checkKey) · 붙일 곳: Keys.gs</span>
+<button class="copy" data-t="cep4_2">복사</button><a class="dl" href="code/ep4/Keys.gs" download>받기</a></div>
+<pre id="cep4_2">// Keys.gs : 스크립트 속성 복습(7주차 2강과 같은 3줄)
+// 키 값은 코드에 쓰지 않고 [프로젝트 설정]의 속성에 둡니다
+
+// 속성에서 키를 꺼내 있는지만 확인합니다(값은 안 보임)
+function checkKey() {
+  const key = PropertiesService
+    .getScriptProperties()
+    .getProperty(&#x27;GEMINI_API_KEY&#x27;);
+  console.log(key ? &#x27;키가 있습니다&#x27; : &#x27;키가 없습니다&#x27;);
+}
+</pre></div>
+<div class="file" id="fep4_3"><div class="bar"><span class="n">sample_script.csv</span>
+<span class="p">발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말) · 붙일 곳: 시트의 &quot;대본&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep4_3">복사</button><a class="dl" href="code/ep4/sample_script.csv" download>받기</a></div>
+<pre id="cep4_3">﻿제목,내용,발표할 말
+내가 쓰는 학습 도구,발표 주제 소개/하루 공부에 쓰는 도구 네 가지,안녕하세요. 오늘은 제가 공부할 때 쓰는 도구를 소개하겠습니다.
+왜 도구가 필요했나,필기가 흩어져 있었다/복습 시간이 부족했다,시험 기간마다 필기가 여러 곳에 흩어져서 찾는 데 시간이 많이 걸렸습니다.
+도구 1. 스프레드시트,자료를 한 표에 모은다/주제·링크·인용구를 적는다,&quot;읽은 자료는 한 표에 모읍니다. 주제와 링크, 인용구만 적어도 나중에 찾기 쉽습니다.&quot;
+도구 2. AI 요약,긴 글을 3줄로 줄인다/원문과 꼭 비교한다,긴 필기는 AI에게 3줄로 줄이게 합니다. 다만 숫자와 이름은 원문과 꼭 비교합니다.
+도구 3. 퀴즈 앱,보기 4개짜리 문제로 바꾼다/틀린 문제만 모은다,&quot;핵심 개념을 퀴즈로 바꾸고, 틀린 문제는 오답노트에 따로 모아서 다시 풀어 봅니다.&quot;
+도구 4. 캘린더,시험일 14일·7일·1일 전에 알림/복습일을 미리 정한다,&quot;시험일을 넣으면 2주 전, 1주 전, 하루 전에 알림이 뜨게 해서 막판 벼락치기를 줄입니다.&quot;
+써 보니 좋았던 점,복습 시간이 줄었다/무엇을 모르는지 보인다,&quot;정리하는 시간이 줄어든 만큼 복습에 쓸 수 있었고, 내가 모르는 부분이 눈에 보였습니다.&quot;
+정리와 질문,&quot;도구는 거들 뿐, 공부는 내가 한다/질문 받겠습니다&quot;,도구는 도와줄 뿐이고 공부는 제가 하는 것입니다. 질문 있으시면 말씀해 주세요.
+</pre></div>
+<footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
+</main><script>
+document.querySelectorAll('button.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=document.getElementById(b.dataset.t).textContent;
+function ok(){b.textContent='복사됨';b.classList.add('done');setTimeout(function(){b.textContent='복사';b.classList.remove('done')},1500)}
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok)}else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}
+})});
+</script></body></html>
