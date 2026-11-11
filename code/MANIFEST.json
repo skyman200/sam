@@ -44,12 +44,43 @@
   },
   {
     "lecture": "7-1",
+    "file": "code/ep1/Clean.gs",
+    "kind": "gs",
+    "purpose": "스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic)",
+    "paste_to": "Clean.gs",
+    "requires": [
+      "code/ep1/Code.gs"
+    ],
+    "lines": 45
+  },
+  {
+    "lecture": "7-1",
+    "file": "code/ep1/Share.gs",
+    "kind": "gs",
+    "purpose": "스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc)",
+    "paste_to": "Share.gs",
+    "requires": [
+      "code/ep1/Code.gs"
+    ],
+    "lines": 39
+  },
+  {
+    "lecture": "7-1",
     "file": "site/practice/scrap_sample.csv",
     "kind": "csv",
     "purpose": "스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)",
     "paste_to": "시트의 \"스크랩\" 탭(파일 > 가져오기)",
     "requires": [],
     "lines": 7
+  },
+  {
+    "lecture": "7-1",
+    "file": "site/practice/scrap_dup_sample.csv",
+    "kind": "csv",
+    "purpose": "중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜)",
+    "paste_to": "시트의 \"스크랩\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 9
   },
   {
     "lecture": "7-2",
@@ -88,6 +119,29 @@
       "code/ep1/Code.gs"
     ],
     "lines": 21
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Menu.gs",
+    "kind": "gs",
+    "purpose": "시트 위 'AI 도우미' 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API)",
+    "paste_to": "Menu.gs",
+    "requires": [
+      "code/ep2/SamSummary.gs",
+      "code/ep2/Pdf.gs"
+    ],
+    "lines": 35
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Folder.gs",
+    "kind": "gs",
+    "purpose": "드라이브 \"수업 PDF\" 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs)",
+    "paste_to": "Folder.gs",
+    "requires": [
+      "code/ep2/Pdf.gs"
+    ],
+    "lines": 42
   },
   {
     "lecture": "7-2",
@@ -140,6 +194,29 @@
   },
   {
     "lecture": "9-1",
+    "file": "code/ep3/Score.gs",
+    "kind": "gs",
+    "purpose": "오늘 점수·정답률을 \"점수\" 탭에 기록(saveScore)과 약한 문제 상위 3개(showWeakTop3)",
+    "paste_to": "Score.gs",
+    "requires": [
+      "code/ep3/Code.gs"
+    ],
+    "lines": 45
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Remind.gs",
+    "kind": "gs",
+    "purpose": "오늘 틀린 문제 개수를 내 메일로 알림(sendRemind)과 매일 밤 9시 트리거(makeRemindTrigger)",
+    "paste_to": "Remind.gs",
+    "requires": [
+      "code/ep3/Score.gs",
+      "code/ep3/Code.gs"
+    ],
+    "lines": 40
+  },
+  {
+    "lecture": "9-1",
     "file": "code/ep3/sample_quiz.csv",
     "kind": "csv",
     "purpose": "Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)",
@@ -155,6 +232,15 @@
     "paste_to": "시트의 \"시험\" 탭(파일 > 가져오기)",
     "requires": [],
     "lines": 2
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/sample_wrong.csv",
+    "kind": "csv",
+    "purpose": "오답노트 연습 데이터 7행(날짜·문제·내 답·정답·해설, 오늘 날짜로 고쳐서 연습)",
+    "paste_to": "시트의 \"오답노트\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 8
   },
   {
     "lecture": "9-2",
@@ -187,11 +273,42 @@
   },
   {
     "lecture": "9-2",
+    "file": "code/ep4/Timer.gs",
+    "kind": "gs",
+    "purpose": "대본 글자 수로 발표 시간 계산(estimateMinutes)과 길이 경고",
+    "paste_to": "Timer.gs",
+    "requires": [
+      "code/ep4/Slides.gs"
+    ],
+    "lines": 38
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Check.gs",
+    "kind": "gs",
+    "purpose": "대본 탭의 빈 칸·너무 긴 문장을 노란색으로 칠하기(highlightProblems)",
+    "paste_to": "Check.gs",
+    "requires": [
+      "code/ep4/Slides.gs"
+    ],
+    "lines": 40
+  },
+  {
+    "lecture": "9-2",
     "file": "code/ep4/sample_script.csv",
     "kind": "csv",
     "purpose": "발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)",
     "paste_to": "시트의 \"대본\" 탭(파일 > 가져오기)",
     "requires": [],
     "lines": 9
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/sample_check.csv",
+    "kind": "csv",
+    "purpose": "대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함)",
+    "paste_to": "시트의 \"대본\" 탭(파일 > 가져오기)",
+    "requires": [],
+    "lines": 6
   }
 ]

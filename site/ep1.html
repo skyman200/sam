@@ -39,7 +39,7 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp)</li><li><code class="i">Index.html</code> 스크랩 웹앱 화면(저장·내 메일로 받기)</li><li><code class="i">Feed.gs</code> RSS 새 글 5건을 스크랩 탭에 추가(importFeed)</li><li><code class="i">Report.gs</code> 스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)</li><li><code class="i">scrap_sample.csv</code> 스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp)</li><li><code class="i">Index.html</code> 스크랩 웹앱 화면(저장·내 메일로 받기)</li><li><code class="i">Feed.gs</code> RSS 새 글 5건을 스크랩 탭에 추가(importFeed)</li><li><code class="i">Report.gs</code> 스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)</li><li><code class="i">Clean.gs</code> 스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic)</li><li><code class="i">Share.gs</code> 스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc)</li><li><code class="i">scrap_sample.csv</code> 스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)</li><li><code class="i">scrap_dup_sample.csv</code> 중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜)</li></ul></div>
 <div class="file" id="fep1_0"><div class="bar"><span class="n">Code.gs</span>
 <span class="p">스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp) · 붙일 곳: Code.gs</span>
 <button class="copy" data-t="cep1_0">복사</button><a class="dl" href="code/ep1/Code.gs" download>받기</a></div>
@@ -301,16 +301,121 @@ function pickDates_(rows) {
     });
 }
 </pre></div>
-<div class="file" id="fep1_4"><div class="bar"><span class="n">scrap_sample.csv</span>
+<div class="file" id="fep1_4"><div class="bar"><span class="n">Clean.gs</span>
+<span class="p">스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic) · 붙일 곳: Clean.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_4">복사</button><a class="dl" href="code/ep1/Clean.gs" download>받기</a></div>
+<pre id="cep1_4">// Clean.gs : 스크랩 중복 지우기와 주제별 개수
+// Code.gs 의 getSheet_ 가 먼저 필요합니다
+// 필요 권한: 구글 스프레드시트 읽기·쓰기
+
+// 같은 링크가 또 나오면 뒤쪽 줄을 지웁니다
+function removeDuplicates() {
+  const sheet = getSheet_();
+  const all = sheet.getDataRange()
+    .getValues();
+  const dups = dupRows_(all);
+
+  dups.forEach(function (n) {
+    sheet.deleteRow(n);
+  });
+  Logger.log(dups.length + &#x27;개 줄을 지웠습니다&#x27;);
+  return dups.length;
+}
+
+// 앞에서 이미 본 링크의 줄 번호를 모읍니다
+function dupRows_(rows) {
+  const seen = {};
+  const found = [];
+
+  for (let i = 1; i &lt; rows.length; i++) {
+    const link = String(rows[i][1]).trim();
+    if (seen[link]) found.push(i + 1);
+    else if (link) seen[link] = true;
+  }
+  return found.reverse(); // 아래 줄부터 지웁니다
+}
+
+// 주제별로 스크랩이 몇 개인지 세어 보여 줍니다
+function countByTopic() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1);
+  const count = {};
+
+  rows.forEach(function (r) {
+    if (r[0] === &#x27;&#x27;) return;
+    count[r[0]] = (count[r[0]] || 0) + 1;
+  });
+  Object.keys(count).forEach(function (k) {
+    Logger.log(k + &#x27;: &#x27; + count[k] + &#x27;개&#x27;);
+  });
+}
+</pre></div>
+<div class="file" id="fep1_5"><div class="bar"><span class="n">Share.gs</span>
+<span class="p">스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc) · 붙일 곳: Share.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_5">복사</button><a class="dl" href="code/ep1/Share.gs" download>받기</a></div>
+<pre id="cep1_5">// Share.gs : 스크랩을 구글 문서 한 개로 모으기
+// Code.gs 의 getSheet_ 가 먼저 필요합니다
+// 필요 권한: 스프레드시트 읽기, 구글 문서 만들기
+const SHARE_TITLE = &#x27;스크랩 모음&#x27;;
+
+// 주제 순서대로 스크랩을 문서 한 개에 담습니다
+function exportToDoc() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  if (rows.length === 0) {
+    throw new Error(&#x27;보낼 스크랩이 없습니다&#x27;);
+  }
+
+  rows.sort(function (a, b) {
+    return String(a[0]).localeCompare(
+      String(b[0]));
+  });
+
+  const doc = DocumentApp.create(
+    SHARE_TITLE);
+  rows.forEach(function (r) {
+    addItem_(doc.getBody(), r);
+  });
+  const url = doc.getUrl();
+  doc.saveAndClose();
+  Logger.log(&#x27;문서 완성: &#x27; + url);
+  return url;
+}
+
+// 문서에 스크랩 한 건(주제·인용구·링크)을 적습니다
+function addItem_(body, r) {
+  const H = DocumentApp.ParagraphHeading;
+  body.appendParagraph(String(r[0]))
+    .setHeading(H.HEADING2);
+  body.appendParagraph(String(r[2]));
+  body.appendParagraph(String(r[1]))
+    .editAsText().setLinkUrl(String(r[1]));
+}
+</pre></div>
+<div class="file" id="fep1_6"><div class="bar"><span class="n">scrap_sample.csv</span>
 <span class="p">스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜) · 붙일 곳: 시트의 &quot;스크랩&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep1_4">복사</button><a class="dl" href="practice/scrap_sample.csv" download>받기</a></div>
-<pre id="cep1_4">﻿주제,링크,인용구,날짜
+<button class="copy" data-t="cep1_6">복사</button><a class="dl" href="practice/scrap_sample.csv" download>받기</a></div>
+<pre id="cep1_6">﻿주제,링크,인용구,날짜
 노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-02
 출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-03
 복습 간격,https://sam.ptclinical.workers.dev/practice/a3.html,&quot;하루 뒤, 사흘 뒤, 일주일 뒤에 나누어 보는 편이 기억에 오래 남는다고 알려져 있다.&quot;,2026-11-04
 AI 요약 점검,https://sam.ptclinical.workers.dev/practice/a4.html,&quot;원문과 나란히 놓고 숫자, 이름, 날짜를 먼저 비교한다.&quot;,2026-11-05
 시험 계획,https://sam.ptclinical.workers.dev/practice/a5.html,시험일에서 거꾸로 계획을 세운다.,2026-11-06
 질문 만들기,https://sam.ptclinical.workers.dev/practice/a6.html,대답하지 못하는 질문이 바로 더 공부할 곳이다.,2026-11-09
+</pre></div>
+<div class="file" id="fep1_7"><div class="bar"><span class="n">scrap_dup_sample.csv</span>
+<span class="p">중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜) · 붙일 곳: 시트의 &quot;스크랩&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep1_7">복사</button><a class="dl" href="practice/scrap_dup_sample.csv" download>받기</a></div>
+<pre id="cep1_7">﻿주제,링크,인용구,날짜
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-02
+출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-03
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-04
+복습 간격,https://sam.ptclinical.workers.dev/practice/a3.html,하루 뒤 사흘 뒤 일주일 뒤에 나누어 본다.,2026-11-04
+출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-05
+시험 계획,https://sam.ptclinical.workers.dev/practice/a5.html,시험일에서 거꾸로 계획을 세운다.,2026-11-06
+복습 간격,https://sam.ptclinical.workers.dev/practice/a6.html,대답하지 못하는 질문이 더 공부할 곳이다.,2026-11-09
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-09
 </pre></div>
 <footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
 </main><script>
