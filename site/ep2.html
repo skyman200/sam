@@ -39,7 +39,7 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Summary.gs</code> 셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary</li><li><code class="i">SamSummary.gs</code> 키 없이 쓰는 셀 함수 SAM_SUMMARY(수업용 Cloudflare API, 캐시 사용)와 testSamSummary</li><li><code class="i">Pdf.gs</code> 시트를 PDF로 내 드라이브에 저장(savePdf)</li><li><code class="i">Trigger.gs</code> 매일 8시대 mailList 자동 실행 트리거(setTrigger)</li><li><code class="i">Menu.gs</code> 시트 위 &#x27;AI 도우미&#x27; 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API)</li><li><code class="i">Folder.gs</code> 드라이브 &quot;수업 PDF&quot; 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs)</li><li><code class="i">sample_notes.csv</code> AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Summary.gs</code> 셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary</li><li><code class="i">SamSummary.gs</code> 키 없이 쓰는 셀 함수 SAM_SUMMARY(수업용 Cloudflare API, 캐시 사용)와 testSamSummary</li><li><code class="i">Pdf.gs</code> 시트를 PDF로 저장하고 {name,url} 반환(savePdf)</li><li><code class="i">WebSummary.gs</code> 요약 노트 화면용 서버 함수(loadNotes, summarizeNote, savePdfLink)</li><li><code class="i">Note.html</code> 웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌</li><li><code class="i">Trigger.gs</code> 매일 8시대 mailList 자동 실행 트리거(setTrigger)</li><li><code class="i">Menu.gs</code> 시트 위 &#x27;AI 도우미&#x27; 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API)</li><li><code class="i">Folder.gs</code> 드라이브 &quot;수업 PDF&quot; 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs)</li><li><code class="i">sample_notes.csv</code> AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸)</li></ul></div>
 <div class="file" id="fep2_0"><div class="bar"><span class="n">Summary.gs</span>
 <span class="p">셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary · 붙일 곳: Summary.gs</span>
 <button class="copy" data-t="cep2_0">복사</button><a class="dl" href="code/ep2/Summary.gs" download>받기</a></div>
@@ -163,7 +163,7 @@ function testSamSummary() {
 }
 </pre></div>
 <div class="file" id="fep2_2"><div class="bar"><span class="n">Pdf.gs</span>
-<span class="p">시트를 PDF로 내 드라이브에 저장(savePdf) · 붙일 곳: Pdf.gs</span>
+<span class="p">시트를 PDF로 저장하고 {name,url} 반환(savePdf) · 붙일 곳: Pdf.gs</span>
 <button class="copy" data-t="cep2_2">복사</button><a class="dl" href="code/ep2/Pdf.gs" download>받기</a></div>
 <pre id="cep2_2">// Pdf.gs : 시트를 PDF로 내 드라이브에 저장
 
@@ -175,12 +175,237 @@ function savePdf() {
   blob.setName(&#x27;한장정리.pdf&#x27;);
   const file = DriveApp.createFile(blob);
   Logger.log(&#x27;저장 완료: &#x27; + file.getUrl());
+  return { name: file.getName(),
+    url: file.getUrl() };
 }
 </pre></div>
-<div class="file" id="fep2_3"><div class="bar"><span class="n">Trigger.gs</span>
+<div class="file" id="fep2_3"><div class="bar"><span class="n">WebSummary.gs</span>
+<span class="p">요약 노트 화면용 서버 함수(loadNotes, summarizeNote, savePdfLink) · 붙일 곳: WebSummary.gs <span class="tag k">먼저 필요: code/ep2/SamSummary.gs, code/ep2/Pdf.gs, code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep2_3">복사</button><a class="dl" href="code/ep2/WebSummary.gs" download>받기</a></div>
+<pre id="cep2_3">// WebSummary.gs : 요약 노트 화면용 함수
+// SamSummary.gs·Pdf.gs 가 먼저 필요합니다
+// 필요 권한: 스프레드시트 읽기·쓰기, 외부 연결, 드라이브
+const NOTE_TAB = &#x27;필기&#x27;;
+const NOTE_MAX = 10;
+
+// &#x27;필기&#x27; 탭 A열(2행부터)을 {row, text} 로 돌려줍니다
+function loadNotes() {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(NOTE_TAB);
+  if (!sheet) throw new Error(&#x27;필기 탭이 없습니다&#x27;);
+
+  const last = sheet.getLastRow();
+  if (last &lt; 2) return [];
+  const vals = sheet
+    .getRange(2, 1, last - 1, 1).getValues();
+
+  const notes = [];
+  vals.forEach(function (v, i) {
+    const text = String(v[0]).trim();
+    if (text &amp;&amp; notes.length &lt; NOTE_MAX) {
+      notes.push({ row: i + 2, text: text });
+    }
+  });
+  return notes;
+}
+
+// 한 칸을 3줄로 요약해 B열에도 저장합니다
+function summarizeNote(row, text) {
+  const out = SAM_SUMMARY(text);
+  SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(NOTE_TAB)
+    .getRange(row, 2).setValue(out);
+  return String(out);
+}
+
+// PDF를 저장하고 파일 이름과 링크를 돌려줍니다
+function savePdfLink() {
+  const file = savePdf();
+  return { name: file.name, url: file.url };
+}
+</pre></div>
+<div class="file" id="fep2_4"><div class="bar"><span class="n">Note.html</span>
+<span class="p">웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌 · 붙일 곳: Note.html <span class="tag k">먼저 필요: code/ep2/WebSummary.gs</span></span>
+<button class="copy" data-t="cep2_4">복사</button><a class="dl" href="code/ep2/Note.html" download>받기</a></div>
+<pre id="cep2_4">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta name=&quot;viewport&quot;
+  content=&quot;width=device-width,
+  initial-scale=1&quot;&gt;
+&lt;style&gt;
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --mark: #FFF1A6; --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+    &quot;Malgun Gothic&quot;, sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 32px; font-weight: 600;
+  line-height: 1.2; margin: 0 0 4px; }
+.lead { color: var(--sub); margin: 0 0 20px; }
+.meta { color: var(--mut); font-size: 16px; }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+button.main { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+button.main:hover { background: #17407E; }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+.card p { margin: 0; }
+.sum { margin-top: 16px; padding: 12px 16px;
+  background: var(--mark); border-radius: 8px;
+  white-space: pre-wrap; }
+.sum:empty { display: none; }
+a { color: var(--blue); word-break: break-all; }
+#msg { min-height: 28px; margin: 20px 0 0; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;main&gt;
+&lt;h1&gt;요약 노트&lt;/h1&gt;
+&lt;p class=&quot;lead&quot;&gt;필기를 칸마다 3줄로 줄입니다&lt;/p&gt;
+&lt;button class=&quot;main&quot;
+  onclick=&quot;showNotes()&quot;&gt;필기 불러오기&lt;/button&gt;
+&lt;button onclick=&quot;sumAll()&quot;&gt;전체 요약&lt;/button&gt;
+&lt;button onclick=&quot;makePdf()&quot;&gt;PDF로 저장&lt;/button&gt;
+&lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
+&lt;p id=&quot;pdf&quot;&gt;&lt;/p&gt;
+&lt;div id=&quot;list&quot;&gt;&lt;/div&gt;
+&lt;/main&gt;
+
+&lt;script&gt;
+// 아이디로 화면 요소를 찾습니다
+function el(id) {
+  return document.getElementById(id);
+}
+// 요소를 새로 만듭니다
+function mk(tag) {
+  return document.createElement(tag);
+}
+// 안내 글을 화면에 보여 줍니다
+function show(t) {
+  el(&#x27;msg&#x27;).textContent = t;
+}
+// 실패하면 이유를 보여 줍니다
+function fail(e) {
+  show(&#x27;오류: &#x27; + e.message);
+}
+
+// [필기 불러오기]: 칸마다 카드를 그립니다
+function showNotes() {
+  show(&#x27;불러오는 중입니다&#x27;);
+  google.script.run
+    .withSuccessHandler(draw)
+    .withFailureHandler(fail)
+    .loadNotes();
+}
+
+// 필기 목록을 카드로 만듭니다
+function draw(notes) {
+  el(&#x27;list&#x27;).textContent = &#x27;&#x27;;
+  notes.forEach(function (n) {
+    const card = mk(&#x27;div&#x27;);
+    card.className = &#x27;card&#x27;;
+    card.dataset.row = n.row;
+    const p = mk(&#x27;p&#x27;);
+    p.textContent = n.text;
+    const b = mk(&#x27;button&#x27;);
+    b.textContent = &#x27;요약&#x27;;
+    b.onclick = function () {
+      one(card, null);
+    };
+    const s = mk(&#x27;div&#x27;);
+    s.className = &#x27;sum&#x27;;
+    card.append(p, b, s);
+    el(&#x27;list&#x27;).appendChild(card);
+  });
+  show(notes.length + &#x27;칸을 불러왔습니다&#x27;);
+}
+
+// 카드 한 칸을 요약해 아래에 보여 줍니다
+function one(card, next) {
+  const box = card.querySelector(&#x27;.sum&#x27;);
+  box.textContent = &#x27;요약 중입니다&#x27;;
+  google.script.run
+    .withSuccessHandler(function (t) {
+      box.textContent = t;
+      if (next) next();
+    })
+    .withFailureHandler(function (e) {
+      box.textContent = &#x27;오류: &#x27; + e.message;
+      if (next) next();
+    })
+    .summarizeNote(Number(card.dataset.row),
+      card.querySelector(&#x27;p&#x27;).textContent);
+}
+
+// [전체 요약]: 카드를 차례로 요약합니다
+function sumAll() {
+  const cards = Array.from(
+    document.querySelectorAll(&#x27;.card&#x27;));
+  let i = 0;
+  function step() {
+    if (i &gt;= cards.length) {
+      show(&#x27;전체 요약을 마쳤습니다&#x27;);
+      return;
+    }
+    show(&#x27;요약 중 &#x27; + (i + 1) + &#x27;/&#x27;
+      + cards.length);
+    one(cards[i++], step);
+  }
+  step();
+}
+
+// [PDF로 저장]: 파일 이름과 링크를 보여 줍니다
+function makePdf() {
+  show(&#x27;PDF 저장 중입니다&#x27;);
+  google.script.run
+    .withSuccessHandler(function (f) {
+      show(&#x27;저장했습니다&#x27;);
+      const a = mk(&#x27;a&#x27;);
+      a.href = f.url;
+      a.target = &#x27;_blank&#x27;;
+      a.textContent = f.name + &#x27; 열기&#x27;;
+      el(&#x27;pdf&#x27;).textContent = &#x27;&#x27;;
+      el(&#x27;pdf&#x27;).appendChild(a);
+    })
+    .withFailureHandler(fail)
+    .savePdfLink();
+}
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+<div class="file" id="fep2_5"><div class="bar"><span class="n">Trigger.gs</span>
 <span class="p">매일 8시대 mailList 자동 실행 트리거(setTrigger) · 붙일 곳: Trigger.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
-<button class="copy" data-t="cep2_3">복사</button><a class="dl" href="code/ep2/Trigger.gs" download>받기</a></div>
-<pre id="cep2_3">// Trigger.gs : 매일 아침 mailList 자동 실행
+<button class="copy" data-t="cep2_5">복사</button><a class="dl" href="code/ep2/Trigger.gs" download>받기</a></div>
+<pre id="cep2_5">// Trigger.gs : 매일 아침 mailList 자동 실행
 
 // 매일 아침 mailList 가 저절로 돌게 예약합니다
 function setTrigger() {
@@ -202,10 +427,10 @@ function setTrigger() {
   Logger.log(&#x27;트리거를 만들었습니다&#x27;);
 }
 </pre></div>
-<div class="file" id="fep2_4"><div class="bar"><span class="n">Menu.gs</span>
+<div class="file" id="fep2_6"><div class="bar"><span class="n">Menu.gs</span>
 <span class="p">시트 위 &#x27;AI 도우미&#x27; 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API) · 붙일 곳: Menu.gs <span class="tag k">먼저 필요: code/ep2/SamSummary.gs, code/ep2/Pdf.gs</span></span>
-<button class="copy" data-t="cep2_4">복사</button><a class="dl" href="code/ep2/Menu.gs" download>받기</a></div>
-<pre id="cep2_4">// Menu.gs : 시트 위쪽에 &#x27;AI 도우미&#x27; 메뉴 만들기
+<button class="copy" data-t="cep2_6">복사</button><a class="dl" href="code/ep2/Menu.gs" download>받기</a></div>
+<pre id="cep2_6">// Menu.gs : 시트 위쪽에 &#x27;AI 도우미&#x27; 메뉴 만들기
 // SamSummary.gs·Pdf.gs 가 먼저 필요합니다
 // 필요 권한: 스프레드시트 읽기·쓰기, 외부 연결
 const MENU_NAME = &#x27;AI 도우미&#x27;;
@@ -241,10 +466,10 @@ function summarizeSelection() {
   Logger.log(cells.length + &#x27;칸을 요약했습니다&#x27;);
 }
 </pre></div>
-<div class="file" id="fep2_5"><div class="bar"><span class="n">Folder.gs</span>
+<div class="file" id="fep2_7"><div class="bar"><span class="n">Folder.gs</span>
 <span class="p">드라이브 &quot;수업 PDF&quot; 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs) · 붙일 곳: Folder.gs <span class="tag k">먼저 필요: code/ep2/Pdf.gs</span></span>
-<button class="copy" data-t="cep2_5">복사</button><a class="dl" href="code/ep2/Folder.gs" download>받기</a></div>
-<pre id="cep2_5">// Folder.gs : 드라이브 폴더 만들기와 PDF 정리
+<button class="copy" data-t="cep2_7">복사</button><a class="dl" href="code/ep2/Folder.gs" download>받기</a></div>
+<pre id="cep2_7">// Folder.gs : 드라이브 폴더 만들기와 PDF 정리
 // Pdf.gs 의 savePdf 로 만든 PDF를 옮깁니다
 // 필요 권한: 구글 드라이브 파일·폴더 관리
 const FOLDER_NAME = &#x27;수업 PDF&#x27;;
@@ -287,10 +512,10 @@ function stamp_(name) {
     ? name : day + &#x27;_&#x27; + name;
 }
 </pre></div>
-<div class="file" id="fep2_6"><div class="bar"><span class="n">sample_notes.csv</span>
+<div class="file" id="fep2_8"><div class="bar"><span class="n">sample_notes.csv</span>
 <span class="p">AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸) · 붙일 곳: 시트의 새 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep2_6">복사</button><a class="dl" href="practice/sample_notes.csv" download>받기</a></div>
-<pre id="cep2_6">﻿주제,필기,요약
+<button class="copy" data-t="cep2_8">복사</button><a class="dl" href="practice/sample_notes.csv" download>받기</a></div>
+<pre id="cep2_8">﻿주제,필기,요약
 광합성,식물은 엽록체에서 빛에너지를 받아 물과 이산화탄소로 포도당을 만든다. 이때 산소가 나온다. 빛이 필요한 명반응과 포도당을 만드는 캘빈 회로로 나뉜다. 시험에는 재료와 산물 구분이 자주 나옴.,
 기회비용,무엇을 선택하면 포기해야 하는 것 중 가장 가치가 큰 것을 기회비용이라 한다. 예: 알바 3시간 대신 공부를 하면 알바로 번 돈이 기회비용. 돈을 직접 내지 않아도 기회비용은 생긴다.,
 수요와 공급,&quot;가격이 오르면 수요량은 줄고 공급량은 늘어난다. 두 곡선이 만나는 점이 균형 가격이다. 수요가 늘면 균형 가격이 오르고, 공급이 늘면 균형 가격이 내려간다. 그래프를 직접 그려 보면 이해가 쉽다.&quot;,

@@ -39,7 +39,7 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Slides.gs</code> 대본 탭을 구글 슬라이드로 자동 생성(makeSlides)</li><li><code class="i">Script.gs</code> 대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc)</li><li><code class="i">Keys.gs</code> PropertiesService 복습 3줄(checkKey)</li><li><code class="i">Timer.gs</code> 대본 글자 수로 발표 시간 계산(estimateMinutes)과 길이 경고</li><li><code class="i">Check.gs</code> 대본 탭의 빈 칸·너무 긴 문장을 노란색으로 칠하기(highlightProblems)</li><li><code class="i">sample_script.csv</code> 발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)</li><li><code class="i">sample_check.csv</code> 대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Slides.gs</code> 대본 탭을 구글 슬라이드로 자동 생성(makeSlides)</li><li><code class="i">Script.gs</code> 대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc)</li><li><code class="i">Keys.gs</code> PropertiesService 복습 3줄(checkKey)</li><li><code class="i">Timer.gs</code> 대본 글자 수로 발표 시간 계산(estimateMinutes)과 길이 경고</li><li><code class="i">Check.gs</code> 대본 탭의 빈 칸·너무 긴 문장을 노란색으로 칠하기(highlightProblems)</li><li><code class="i">Web.gs</code> 발표 도우미 웹앱 doGet와 화면용 서버 함수(loadScript, checkScript, estimate, makeSlidesUrl)</li><li><code class="i">Helper.html</code> 웹앱 화면: 대본 카드, 고칠 칸 노란 표시, 예상 발표 시간, 슬라이드 링크와 제목 목록</li><li><code class="i">sample_script.csv</code> 발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)</li><li><code class="i">sample_check.csv</code> 대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함)</li></ul></div>
 <div class="file" id="fep4_0"><div class="bar"><span class="n">Slides.gs</span>
 <span class="p">대본 탭을 구글 슬라이드로 자동 생성(makeSlides) · 붙일 곳: Slides.gs</span>
 <button class="copy" data-t="cep4_0">복사</button><a class="dl" href="code/ep4/Slides.gs" download>받기</a></div>
@@ -82,7 +82,9 @@ function makeSlides() {
   blank.remove(); // 빈 첫 장 지우기
   const url = deck.getUrl();
   console.log(&#x27;완성: &#x27; + url);
-  ss.toast(&#x27;내 드라이브에 저장했습니다&#x27;, &#x27;완성&#x27;, 10);
+  try { // 웹앱에서는 알림이 없어도 됩니다
+    ss.toast(&#x27;내 드라이브에 저장했습니다&#x27;, &#x27;완성&#x27;, 10);
+  } catch (e) {}
   return url;
 }
 
@@ -138,9 +140,9 @@ function makeScriptDoc() {
   const body = doc.getBody();
   const H = DocumentApp.ParagraphHeading;
   const G = DocumentApp.GlyphType;
-  body.getParagraphs()[0]
-    .setText(ss.getName())
-    .setHeading(H.TITLE);
+  const first = body.getParagraphs()[0];
+  first.setText(ss.getName());
+  first.setHeading(H.TITLE);
 
   items.forEach((r, i) =&gt; {
     body.appendParagraph(
@@ -268,10 +270,236 @@ function isBad_(cell, row) {
     s =&gt; s.trim().length &gt; MAX_SENTENCE);
 }
 </pre></div>
-<div class="file" id="fep4_5"><div class="bar"><span class="n">sample_script.csv</span>
+<div class="file" id="fep4_5"><div class="bar"><span class="n">Web.gs</span>
+<span class="p">발표 도우미 웹앱 doGet와 화면용 서버 함수(loadScript, checkScript, estimate, makeSlidesUrl) · 붙일 곳: Web.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs, code/ep4/Check.gs, code/ep4/Timer.gs</span></span>
+<button class="copy" data-t="cep4_5">복사</button><a class="dl" href="code/ep4/Web.gs" download>받기</a></div>
+<pre id="cep4_5">// Web.gs : 발표 도우미 웹앱 화면의 서버 함수
+// Slides.gs·Timer.gs·Check.gs 가 먼저 필요합니다
+// 필요 권한: 스프레드시트·슬라이드 (기존과 같음)
+
+// 웹앱 주소를 열면 발표 도우미 화면을 보여 줍니다
+function doGet(e) {
+  return HtmlService
+    .createHtmlOutputFromFile(&#x27;Helper&#x27;)
+    .setTitle(&#x27;발표 도우미&#x27;)
+    .addMetaTag(&#x27;viewport&#x27;,
+      &#x27;width=device-width, initial-scale=1&#x27;);
+}
+
+// 대본 탭 2행부터의 값을 모두 가져옵니다
+function scriptRows_() {
+  const sh = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+  if (!sh || sh.getLastRow() &lt; 2) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+  return sh.getRange(
+    2, 1, sh.getLastRow() - 1, 3)
+    .getValues();
+}
+
+// 대본 줄마다 [제목, 내용, 발표할 말] 문자열로
+function loadScript() {
+  return scriptRows_().map(
+    r =&gt; r.map(c =&gt; String(c)));
+}
+
+// 고칠 칸 목록 [{row, col, why}] (시트는 안 칠함)
+function checkScript() {
+  const list = [];
+  scriptRows_().forEach((r, i) =&gt; {
+    r.forEach((c, j) =&gt; {
+      if (!isBad_(c, r)) return;
+      const why = String(c).trim() === &#x27;&#x27;
+        ? &#x27;빈 칸입니다&#x27;
+        : &#x27;한 문장이 &#x27; + MAX_SENTENCE
+          + &#x27;자를 넘습니다&#x27;;
+      list.push({
+        row: i + 2, col: j + 1, why });
+    });
+  });
+  return list;
+}
+
+// 예상 발표 시간(분)을 숫자로 돌려줍니다
+function estimate() {
+  return estimateMinutes();
+}
+
+// 슬라이드를 만들고 {url, titles} 를 돌려줍니다
+function makeSlidesUrl() {
+  const url = makeSlides();
+  const titles = scriptRows_()
+    .filter(r =&gt; r[0])
+    .map(r =&gt; String(r[0]));
+  return { url, titles };
+}
+</pre></div>
+<div class="file" id="fep4_6"><div class="bar"><span class="n">Helper.html</span>
+<span class="p">웹앱 화면: 대본 카드, 고칠 칸 노란 표시, 예상 발표 시간, 슬라이드 링크와 제목 목록 · 붙일 곳: Helper.html <span class="tag k">먼저 필요: code/ep4/Web.gs</span></span>
+<button class="copy" data-t="cep4_6">복사</button><a class="dl" href="code/ep4/Helper.html" download>받기</a></div>
+<pre id="cep4_6">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta name=&quot;viewport&quot;
+ content=&quot;width=device-width,
+ initial-scale=1&quot;&gt;
+&lt;style&gt;
+:root{--ink:#1A1A1A;--sub:#555;--mut:#6B6B6B;
+ --blue:#1F4E9A;--mark:#FFE066;
+ --paper:#F4F3EE;--line:rgba(26,26,26,.12);
+ --ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 20px 48px;
+ background:var(--paper);color:var(--ink);
+ font:18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+ &quot;Malgun Gothic&quot;,sans-serif}
+main{max-width:880px;margin:0 auto}
+h1{font-size:32px;font-weight:600;
+ line-height:1.2;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.meta{color:var(--mut);font-size:16px}
+.bar{display:flex;gap:12px}
+button{flex:1;font:inherit;font-weight:600;
+ padding:16px 20px;border-radius:10px;
+ cursor:pointer;color:var(--ink);
+ background:#fff;border:2px solid var(--ink);
+ transition:background-color .15s var(--ease),
+ transform .15s var(--ease)}
+button:hover{background:#EDECE6}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:3px solid var(--blue);
+ outline-offset:2px}
+button.main{background:var(--blue);
+ border-color:var(--blue);color:#fff}
+button.main:hover{background:#17407E}
+#msg{min-height:28px;margin:16px 0 0}
+.card{background:#fff;padding:20px;
+ border:1px solid var(--line);
+ border-radius:12px;margin:12px 0;
+ animation:in .3s var(--ease) both}
+.line{display:grid;gap:12px;
+ align-items:start;
+ grid-template-columns:1fr 1.2fr 2fr}
+@media (max-width:640px){
+ .line{grid-template-columns:1fr}}
+.f{padding:8px 12px;border-radius:8px}
+.f .meta{display:block}
+.bad{background:var(--mark)}
+.bad .meta{color:var(--ink)}
+.why{font-weight:600;margin-top:4px}
+.stat{display:none}
+#time{font-size:32px;font-weight:600;
+ font-variant-numeric:tabular-nums}
+a{color:var(--blue);font-weight:600}
+#slides div{margin-top:4px}
+@keyframes in{
+ from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){
+ .card{animation:none}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main&gt;
+&lt;h1&gt;발표 도우미&lt;/h1&gt;
+&lt;p class=&quot;lead&quot;&gt;대본을 확인하고 슬라이드를 만듭니다&lt;/p&gt;
+&lt;div class=&quot;bar&quot;&gt;
+&lt;button onclick=&quot;load()&quot;&gt;대본 불러오기&lt;/button&gt;
+&lt;button class=&quot;main&quot;
+ onclick=&quot;make()&quot;&gt;슬라이드 만들기&lt;/button&gt;
+&lt;/div&gt;
+&lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
+&lt;div id=&quot;stat&quot; class=&quot;card stat&quot;&gt;
+&lt;span class=&quot;meta&quot;&gt;예상 발표 시간&lt;/span&gt;
+&lt;div id=&quot;time&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;out&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;slides&quot;&gt;&lt;/div&gt;
+&lt;/main&gt;
+&lt;script&gt;
+const NAMES = [&#x27;제목&#x27;, &#x27;내용&#x27;, &#x27;발표할 말&#x27;];
+const run = () =&gt; google.script.run
+  .withFailureHandler(
+    e =&gt; say(&#x27;오류: &#x27; + e.message));
+const $ = id =&gt; document.getElementById(id);
+const mk = (cls) =&gt; {
+  const d = document.createElement(&#x27;div&#x27;);
+  if (cls) d.className = cls;
+  return d;
+};
+function say(t) {
+  $(&#x27;msg&#x27;).textContent = t;
+}
+function load() {
+  say(&#x27;불러오는 중...&#x27;);
+  run().withSuccessHandler(rows =&gt; {
+    run().withSuccessHandler(bad =&gt; {
+      draw(rows, bad);
+      run().withSuccessHandler(m =&gt; {
+        $(&#x27;stat&#x27;).style.display = &#x27;block&#x27;;
+        $(&#x27;time&#x27;).textContent =
+          m.toFixed(1) + &#x27;분&#x27;;
+      }).estimate();
+    }).checkScript();
+  }).loadScript();
+}
+function draw(rows, bad) {
+  const out = $(&#x27;out&#x27;);
+  out.textContent = &#x27;&#x27;;
+  rows.forEach((r, i) =&gt; {
+    if (r.join(&#x27;&#x27;) === &#x27;&#x27;) return;
+    const card = mk(&#x27;card line&#x27;);
+    r.forEach((v, j) =&gt; {
+      const f = mk(&#x27;f&#x27;);
+      const b = bad.find(x =&gt;
+        x.row === i + 2 &amp;&amp; x.col === j + 1);
+      const label = mk(&#x27;meta&#x27;);
+      label.textContent = NAMES[j];
+      const val = mk();
+      val.textContent = v;
+      f.append(label, val);
+      if (b) {
+        f.className += &#x27; bad&#x27;;
+        const w = mk(&#x27;why&#x27;);
+        w.textContent = &#x27;고치기: &#x27; + b.why;
+        f.appendChild(w);
+      }
+      card.appendChild(f);
+    });
+    out.appendChild(card);
+  });
+  say(&#x27;고칠 칸 &#x27; + bad.length + &#x27;개&#x27;);
+}
+function make() {
+  say(&#x27;슬라이드 만드는 중...&#x27;);
+  run().withSuccessHandler(res =&gt; {
+    const box = $(&#x27;slides&#x27;);
+    box.textContent = &#x27;&#x27;;
+    const card = mk(&#x27;card&#x27;);
+    const a = document.createElement(&#x27;a&#x27;);
+    a.href = res.url;
+    a.target = &#x27;_blank&#x27;;
+    a.textContent = &#x27;슬라이드 열기&#x27;;
+    card.appendChild(a);
+    res.titles.forEach((t, i) =&gt; {
+      const p = mk();
+      p.textContent = (i + 1) + &#x27;. &#x27; + t;
+      card.appendChild(p);
+    });
+    box.appendChild(card);
+    say(&#x27;슬라이드를 만들었습니다&#x27;);
+  }).makeSlidesUrl();
+}
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+<div class="file" id="fep4_7"><div class="bar"><span class="n">sample_script.csv</span>
 <span class="p">발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말) · 붙일 곳: 시트의 &quot;대본&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep4_5">복사</button><a class="dl" href="code/ep4/sample_script.csv" download>받기</a></div>
-<pre id="cep4_5">﻿제목,내용,발표할 말
+<button class="copy" data-t="cep4_7">복사</button><a class="dl" href="code/ep4/sample_script.csv" download>받기</a></div>
+<pre id="cep4_7">﻿제목,내용,발표할 말
 내가 쓰는 학습 도구,발표 주제 소개/하루 공부에 쓰는 도구 네 가지,안녕하세요. 오늘은 제가 공부할 때 쓰는 도구를 소개하겠습니다.
 왜 도구가 필요했나,필기가 흩어져 있었다/복습 시간이 부족했다,시험 기간마다 필기가 여러 곳에 흩어져서 찾는 데 시간이 많이 걸렸습니다.
 도구 1. 스프레드시트,자료를 한 표에 모은다/주제·링크·인용구를 적는다,&quot;읽은 자료는 한 표에 모읍니다. 주제와 링크, 인용구만 적어도 나중에 찾기 쉽습니다.&quot;
@@ -281,10 +509,10 @@ function isBad_(cell, row) {
 써 보니 좋았던 점,복습 시간이 줄었다/무엇을 모르는지 보인다,&quot;정리하는 시간이 줄어든 만큼 복습에 쓸 수 있었고, 내가 모르는 부분이 눈에 보였습니다.&quot;
 정리와 질문,&quot;도구는 거들 뿐, 공부는 내가 한다/질문 받겠습니다&quot;,도구는 도와줄 뿐이고 공부는 제가 하는 것입니다. 질문 있으시면 말씀해 주세요.
 </pre></div>
-<div class="file" id="fep4_6"><div class="bar"><span class="n">sample_check.csv</span>
+<div class="file" id="fep4_8"><div class="bar"><span class="n">sample_check.csv</span>
 <span class="p">대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함) · 붙일 곳: 시트의 &quot;대본&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep4_6">복사</button><a class="dl" href="code/ep4/sample_check.csv" download>받기</a></div>
-<pre id="cep4_6">﻿제목,내용,발표할 말
+<button class="copy" data-t="cep4_8">복사</button><a class="dl" href="code/ep4/sample_check.csv" download>받기</a></div>
+<pre id="cep4_8">﻿제목,내용,발표할 말
 내가 쓰는 학습 도구,발표 주제 소개/하루 공부에 쓰는 도구 네 가지,안녕하세요. 오늘은 제가 공부할 때 쓰는 도구를 소개하겠습니다.
 왜 도구가 필요했나,,시험 기간마다 필기가 여러 곳에 흩어져서 찾는 데 시간이 많이 걸렸습니다.
 도구 1. 스프레드시트,자료를 한 표에 모은다/주제·링크·인용구를 적는다,

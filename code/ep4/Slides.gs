@@ -37,7 +37,9 @@ function makeSlides() {
   blank.remove(); // 빈 첫 장 지우기
   const url = deck.getUrl();
   console.log('완성: ' + url);
-  ss.toast('내 드라이브에 저장했습니다', '완성', 10);
+  try { // 웹앱에서는 알림이 없어도 됩니다
+    ss.toast('내 드라이브에 저장했습니다', '완성', 10);
+  } catch (e) {}
   return url;
 }
 

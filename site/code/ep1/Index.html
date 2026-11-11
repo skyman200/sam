@@ -1,24 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
+<base target="_top">
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1">
 <style>
-body { font-family: sans-serif;
-  padding: 16px; }
-input, textarea, button { width: 100%;
-  font-size: 18px; padding: 12px;
-  margin: 6px 0; box-sizing: border-box; }
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --mark: #FFE066; --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 32px; font-weight: 600;
+  line-height: 1.2; margin: 0 0 4px; }
+h2 { font-size: 20px; font-weight: 600;
+  margin: 32px 0 12px; }
+.lead { color: var(--sub); margin: 0 0 20px; }
+.meta { color: var(--mut); font-size: 16px; }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+label { display: block; color: var(--sub);
+  font-size: 16px; margin: 12px 0 4px; }
+input, textarea { width: 100%; font: inherit;
+  padding: 12px 16px; border-radius: 10px;
+  border: 1.5px solid #8A8A85;
+  background: #fff; }
+input:focus, textarea:focus {
+  outline: 3px solid var(--blue);
+  border-color: var(--blue); }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+button.main { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+button.main:hover { background: #17407E; }
+mark { background: var(--mark);
+  color: inherit; padding: 0 4px; }
+.top { font-size: 20px; font-weight: 600;
+  margin: 0 0 4px; }
+.card a { color: var(--blue);
+  word-break: break-all; }
+.card p { margin: 4px 0; }
+.row { display: flex; gap: 12px;
+  align-items: center; margin: 8px 0; }
+.row .lab { width: 40%; flex: none; }
+.bar { background: #C9C9C4; height: 16px;
+  border-radius: 4px; }
+.bar.top { background: var(--blue); }
+.row .num { font-variant-numeric: tabular-nums; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
 </style>
 </head>
 
 <body>
-<h2>내 스크랩</h2>
-<input id="topic" placeholder="주제">
-<input id="link" placeholder="링크">
-<textarea id="quote" rows="3"
-  placeholder="인용구"></textarea>
-<button onclick="save()">저장</button>
+<main>
+<h1>내 스크랩</h1>
+<p class="lead">읽은 자료를 주제·링크·인용구로 모읍니다</p>
+
+<section class="card">
+  <label for="topic">주제</label>
+  <input id="topic">
+  <label for="link">링크</label>
+  <input id="link">
+  <label for="quote">인용구</label>
+  <textarea id="quote" rows="3"></textarea>
+  <button class="main" onclick="save()">
+    저장</button>
+  <p id="msg" class="meta"></p>
+</section>
+
+<h2>내 스크랩 목록</h2>
+<div id="list"></div>
+
+<h2>정리하고 내보내기</h2>
+<button onclick="doClean()">정리하기</button>
+<div id="clean"></div>
+<button onclick="doExport()">
+  문서로 내보내기</button>
+<div id="doc"></div>
 <button onclick="mail()">내 메일로 받기</button>
-<p id="msg"></p>
+</main>
 
 <script>
 // 아이디로 화면 요소를 찾습니다
@@ -33,15 +117,121 @@ function show(t) {
 function fail(e) {
   show('실패: ' + e.message);
 }
+// 글(textContent)만 넣은 요소를 만듭니다
+function make(tag, text, cls) {
+  const n = document.createElement(tag);
+  n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+// http(s) 주소만 링크로, 나머지는 글로 보여 줍니다
+function linkNode(url) {
+  if (!/^https?:\/\//.test(url)) {
+    return make('p', url);
+  }
+  const a = make('a', url);
+  a.href = url;
+  a.target = '_blank';
+  return a;
+}
 
-// [저장]을 누르면 시트에 한 줄 추가합니다
+// 스크랩 카드들을 목록 칸에 그립니다
+function drawList(items) {
+  const box = el('list');
+  box.textContent = '';
+  if (items.length === 0) {
+    box.appendChild(
+      make('p', '스크랩이 없습니다', 'meta'));
+  }
+  items.forEach(function (s) {
+    const c = make('div', '', 'card');
+    c.appendChild(make('p', s.topic, 'top'));
+    c.appendChild(make('p', s.quote));
+    c.appendChild(linkNode(s.link));
+    c.appendChild(make('p', s.date, 'meta'));
+    box.appendChild(c);
+  });
+}
+// 시트에서 최신 목록을 다시 받아 옵니다
+function reload() {
+  google.script.run
+    .withSuccessHandler(drawList)
+    .withFailureHandler(fail)
+    .listScraps();
+}
+
+// [저장]을 누르면 한 줄 추가하고 목록을 새로 고칩니다
 function save() {
   show('저장 중입니다');
   google.script.run
-    .withSuccessHandler(show)
+    .withSuccessHandler(function (t) {
+      show(t);
+      el('topic').value = '';
+      el('link').value = '';
+      el('quote').value = '';
+      reload();
+    })
     .withFailureHandler(fail)
     .addScrap(el('topic').value,
       el('link').value, el('quote').value);
+}
+
+// 정리 결과(삭제 건수와 주제별 막대)를 그립니다
+function drawClean(r) {
+  const box = el('clean');
+  box.textContent = '';
+  const c = make('div', '', 'card');
+  const p = make('p', '');
+  p.appendChild(
+    make('mark', '중복 ' + r.removed + '건 삭제'));
+  c.appendChild(p);
+  const max = Math.max(1, ...r.counts.map(
+    function (x) { return x.n; }));
+  r.counts.forEach(function (x) {
+    const row = make('div', '', 'row');
+    const bar = make('div', '', 'bar');
+    if (x.n === max && max > 1) {
+      bar.className = 'bar top';
+    }
+    bar.style.width = (x.n / max * 45) + '%';
+    row.appendChild(make('span', x.topic, 'lab'));
+    row.appendChild(bar);
+    row.appendChild(make('span', x.n, 'num'));
+    c.appendChild(row);
+  });
+  box.appendChild(c);
+  reload();
+}
+// [정리하기]를 누르면 중복을 지우고 결과를 보여 줍니다
+function doClean() {
+  google.script.run
+    .withSuccessHandler(drawClean)
+    .withFailureHandler(fail)
+    .cleanUp();
+}
+
+// 만든 문서의 이름과 링크를 보여 줍니다
+function drawDoc(r) {
+  const box = el('doc');
+  box.textContent = '';
+  const c = make('div', '', 'card');
+  const p = make('p', '', 'top');
+  p.appendChild(make('mark', r.title));
+  c.appendChild(p);
+  c.appendChild(make('p', r.n + '건', 'meta'));
+  c.appendChild(linkNode(r.url));
+  box.appendChild(c);
+}
+// [문서로 내보내기]를 누르면 문서를 만듭니다
+function doExport() {
+  show('문서 만드는 중입니다');
+  google.script.run
+    .withSuccessHandler(function (r) {
+      show('');
+      drawDoc(r);
+    })
+    .withFailureHandler(fail)
+    .exportDoc();
 }
 
 // [내 메일로 받기]를 누르면 메일을 보냅니다
@@ -52,6 +242,8 @@ function mail() {
     .withFailureHandler(fail)
     .mailList();
 }
+
+reload();
 </script>
 </body>
 </html>

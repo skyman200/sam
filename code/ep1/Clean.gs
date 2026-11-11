@@ -29,7 +29,14 @@ function dupRows_(rows) {
   return found.reverse(); // 아래 줄부터 지웁니다
 }
 
-// 주제별로 스크랩이 몇 개인지 세어 보여 줍니다
+// 화면용: 중복을 지우고 주제별 개수와 함께 돌려줍니다
+function cleanUp() {
+  const removed = removeDuplicates();
+  return { removed: removed,
+    counts: countByTopic() };
+}
+
+// 주제별로 스크랩이 몇 개인지 세어 돌려줍니다
 function countByTopic() {
   const rows = getSheet_().getDataRange()
     .getValues().slice(1);
@@ -39,7 +46,9 @@ function countByTopic() {
     if (r[0] === '') return;
     count[r[0]] = (count[r[0]] || 0) + 1;
   });
-  Object.keys(count).forEach(function (k) {
-    Logger.log(k + ': ' + count[k] + '개');
-  });
+  return Object.keys(count).map(
+    function (k) {
+      Logger.log(k + ': ' + count[k] + '개');
+      return { topic: k, n: count[k] };
+    });
 }

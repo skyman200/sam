@@ -37,3 +37,14 @@ function addItem_(body, r) {
   body.appendParagraph(String(r[1]))
     .editAsText().setLinkUrl(String(r[1]));
 }
+
+// 화면용: 문서를 만들고 이름·링크·건수를 돌려줍니다
+function exportDoc() {
+  const url = exportToDoc();
+  let n = 0;
+  countByTopic().forEach(function (c) {
+    n += c.n;
+  });
+  return { url: url, title: SHARE_TITLE,
+    n: n };
+}

@@ -8,4 +8,6 @@ function savePdf() {
   blob.setName('한장정리.pdf');
   const file = DriveApp.createFile(blob);
   Logger.log('저장 완료: ' + file.getUrl());
+  return { name: file.getName(),
+    url: file.getUrl() };
 }

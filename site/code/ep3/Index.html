@@ -1,19 +1,101 @@
 <!DOCTYPE html>
-<html><head><base target="_top">
+<html>
+<head>
+<base target="_top">
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1">
 <style>
-body{font-family:sans-serif;padding:16px}
-button{display:block;width:100%;
-  margin:8px 0;padding:14px;font-size:18px}
-#msg{font-size:20px}
-</style></head><body>
-<h3 id="q">불러오는 중</h3>
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --bad: #B3261E; --mark: #FFE066;
+  --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 "Apple SD Gothic Neo",
+    "Malgun Gothic", sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 600;
+  line-height: 1.3; margin: 0 0 16px; }
+h2 { font-size: 20px; font-weight: 600;
+  margin: 32px 0 12px; }
+.meta { color: var(--mut); font-size: 16px; }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:disabled { color: var(--mut);
+  border-color: #8A8A85; cursor: default; }
+button:disabled:hover { background: #fff; }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+#ch button { text-align: left;
+  font-weight: 500; }
+#ch button.right { color: var(--ink);
+  background: #E6EEF9;
+  border-color: var(--blue); }
+#ch button.miss { color: var(--ink);
+  border-color: var(--bad); }
+#go { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+#go:hover { background: #17407E; }
+#msg:not(:empty) { background: #fff;
+  border: 2px solid var(--blue);
+  border-radius: 12px; padding: 16px 20px;
+  margin: 16px 0 0; }
+#msg.no { border-color: var(--bad); }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+.card div { margin-top: 4px; }
+.ans { font-weight: 600; }
+.big { font-size: 56px; font-weight: 600;
+  line-height: 1.1; margin: 8px 0 4px;
+  font-variant-numeric: tabular-nums; }
+mark { background: var(--mark);
+  color: inherit; padding: 0 8px; }
+a { color: var(--blue);
+  word-break: break-all; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="q">불러오는 중</h1>
 <div id="ch"></div><p id="msg"></p>
 
 <button id="go" onclick="goNext()"
   style="display:none">다음 문제</button>
+<button id="rs" onclick="showResult()"
+  style="display:none">내 결과 보기</button>
+<div id="out"></div>
+<div id="tools" style="display:none">
+  <button onclick="makeDoc()">
+    복습 문서 만들기</button><div id="doc"></div>
+  <button onclick="regExam()">
+    시험 일정 등록</button><div id="exam"></div>
+</div>
+</main>
 <script>
 const $ = id => document.getElementById(id);
-let quiz = [], n = 0, score = 0;
+let quiz = [], n = 0, score = 0, mine = [];
+let pending = 0, ended = false;
 google.script.run
   .withSuccessHandler(start)
   .withFailureHandler(fail)
@@ -52,9 +134,14 @@ function addBtn(text, no) {
 function pick(no) {
   const it = quiz[n];
   document.querySelectorAll('#ch button')
-    .forEach(b => { b.disabled = true; });
+    .forEach((b, i) => {
+      b.disabled = true;
+      if (i + 1 === it.ans) b.className = 'right';
+      else if (i + 1 === no) b.className = 'miss';
+    });
   if (no === it.ans) {
     score++;
+    $('msg').className = '';
     $('msg').textContent = '정답. ' + it.exp;
   } else { wrong(it, no); }
   $('go').style.display = 'block';
@@ -67,16 +154,105 @@ function goNext() {
   $('q').textContent = '점수 ' + score
     + ' / ' + quiz.length;
   $('ch').innerHTML = '';
-  $('msg').textContent = '틀린 문제는 오답노트에';
+  $('msg').textContent = '';
   $('go').style.display = 'none';
+  ended = true;
+  $('rs').style.display = 'block';
+  if (pending === 0) showResult();
 }
 
 // 오답이면 정답을 알리고 시트에 저장합니다
 function wrong(it, no) {
+  mine.push({ q: it.q, mine: no,
+    answer: it.ans, why: it.exp });
+  $('msg').className = 'no';
   $('msg').textContent = '오답. 정답은 '
     + it.ans + '번. ' + it.exp;
-  google.script.run.withFailureHandler(fail)
+  pending++;
+  google.script.run.withSuccessHandler(saved)
+    .withFailureHandler(e => {
+      saved(); fail(e);
+    })
     .saveWrong(n, no);
 }
+
+// 저장이 다 끝나면 결과 화면을 보여 줍니다
+function saved() {
+  pending--;
+  if (ended && pending === 0) showResult();
+}
+
+// 서버에서 결과를 받아 화면에 그립니다
+function showResult() {
+  google.script.run.withSuccessHandler(draw)
+    .withFailureHandler(fail).getResult();
+}
+
+// 태그 하나를 만들어 글자(textContent)를 넣습니다
+function add(box, tag, text, cls) {
+  const e = document.createElement(tag);
+  e.textContent = text;
+  if (cls) e.className = cls;
+  box.appendChild(e);
+  return e;
+}
+
+// 점수·틀린 문제·TOP3 를 그립니다
+function draw(r) {
+  const o = $('out');
+  o.innerHTML = '';
+  const my = ended;
+  const sc = my ? score : r.score;
+  const tot = my ? quiz.length : r.total;
+  const wr = my ? mine : r.wrongs;
+  const big = add(o, 'div', '', 'big');
+  add(big, 'mark', sc + ' / ' + tot);
+  add(o, 'div', '정답률 '
+    + Math.round(sc / tot * 100) + '%', 'meta');
+  add(o, 'h2', '틀린 문제 ' + wr.length + '개');
+  wr.forEach(w => wrongCard(o, w));
+  add(o, 'h2', '가장 자주 틀린 문제 TOP3');
+  r.top3.forEach((t, i) => add(o, 'div',
+    (i + 1) + '위 ' + t.n + '번 · '
+    + t.q, 'card'));
+  $('tools').style.display = 'block';
+}
+
+// 틀린 문제 한 개를 카드로 그립니다
+function wrongCard(o, w) {
+  const c = add(o, 'div', '', 'card');
+  const it = quiz.find(x => x.q === w.q);
+  const say = no => no + '번'
+    + (it ? ' ' + it.ch[no - 1] : '');
+  add(c, 'b', w.q);
+  add(c, 'div', '내 답: ' + say(w.mine));
+  add(c, 'div', '정답: ' + say(w.answer), 'ans');
+  add(c, 'div', '해설: ' + w.why, 'meta');
+}
+
+// 복습 문서를 만들고 링크를 보여 줍니다
+function makeDoc() {
+  $('doc').textContent = '만드는 중...';
+  google.script.run.withFailureHandler(fail)
+    .withSuccessHandler(url => {
+      $('doc').textContent = '';
+      const a = add($('doc'), 'a',
+        '복습 문서 열기');
+      if (/^https:/.test(url)) a.href = url;
+      a.target = '_blank';
+    }).makeReviewDocUrl();
+}
+
+// 시험 일정을 등록하고 날짜 목록을 보여 줍니다
+function regExam() {
+  $('exam').textContent = '등록 중...';
+  google.script.run.withFailureHandler(fail)
+    .withSuccessHandler(list => {
+      $('exam').textContent = '';
+      list.forEach(t =>
+        add($('exam'), 'div', t, 'card'));
+    }).addExamEvents();
+}
 </script>
-</body></html>
+</body>
+</html>

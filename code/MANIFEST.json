@@ -3,21 +3,21 @@
     "lecture": "7-1",
     "file": "code/ep1/Code.gs",
     "kind": "gs",
-    "purpose": "스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp)",
+    "purpose": "웹앱 doGet(?page= 로 화면 선택), 저장 addScrap, 목록 listScraps, 메일 mailList",
     "paste_to": "Code.gs",
     "requires": [],
-    "lines": 54
+    "lines": 84
   },
   {
     "lecture": "7-1",
     "file": "code/ep1/Index.html",
     "kind": "html",
-    "purpose": "스크랩 웹앱 화면(저장·내 메일로 받기)",
+    "purpose": "웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시",
     "paste_to": "Index.html",
     "requires": [
       "code/ep1/Code.gs"
     ],
-    "lines": 57
+    "lines": 249
   },
   {
     "lecture": "7-1",
@@ -46,23 +46,23 @@
     "lecture": "7-1",
     "file": "code/ep1/Clean.gs",
     "kind": "gs",
-    "purpose": "스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic)",
+    "purpose": "중복 링크 삭제(removeDuplicates), 주제별 개수(countByTopic), 화면용 cleanUp",
     "paste_to": "Clean.gs",
     "requires": [
       "code/ep1/Code.gs"
     ],
-    "lines": 45
+    "lines": 54
   },
   {
     "lecture": "7-1",
     "file": "code/ep1/Share.gs",
     "kind": "gs",
-    "purpose": "스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc)",
+    "purpose": "스크랩을 문서로 내보내기(exportToDoc)와 화면용 exportDoc",
     "paste_to": "Share.gs",
     "requires": [
       "code/ep1/Code.gs"
     ],
-    "lines": 39
+    "lines": 50
   },
   {
     "lecture": "7-1",
@@ -104,10 +104,34 @@
     "lecture": "7-2",
     "file": "code/ep2/Pdf.gs",
     "kind": "gs",
-    "purpose": "시트를 PDF로 내 드라이브에 저장(savePdf)",
+    "purpose": "시트를 PDF로 저장하고 {name,url} 반환(savePdf)",
     "paste_to": "Pdf.gs",
     "requires": [],
-    "lines": 11
+    "lines": 13
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/WebSummary.gs",
+    "kind": "gs",
+    "purpose": "요약 노트 화면용 서버 함수(loadNotes, summarizeNote, savePdfLink)",
+    "paste_to": "WebSummary.gs",
+    "requires": [
+      "code/ep2/SamSummary.gs",
+      "code/ep2/Pdf.gs",
+      "code/ep1/Code.gs"
+    ],
+    "lines": 42
+  },
+  {
+    "lecture": "7-2",
+    "file": "code/ep2/Note.html",
+    "kind": "html",
+    "purpose": "웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌",
+    "paste_to": "Note.html",
+    "requires": [
+      "code/ep2/WebSummary.gs"
+    ],
+    "lines": 173
   },
   {
     "lecture": "7-2",
@@ -165,12 +189,12 @@
     "lecture": "9-1",
     "file": "code/ep3/Index.html",
     "kind": "html",
-    "purpose": "퀴즈 웹앱 화면",
+    "purpose": "퀴즈 웹앱 화면: 풀이 후 점수·틀린 문제·TOP3·복습 문서·시험 일정을 화면에 표시",
     "paste_to": "Index.html",
     "requires": [
       "code/ep3/Code.gs"
     ],
-    "lines": 82
+    "lines": 258
   },
   {
     "lecture": "9-1",
@@ -179,7 +203,7 @@
     "purpose": "시험일 D-14·D-7·D-1을 캘린더에 등록(addExam)",
     "paste_to": "Exam.gs",
     "requires": [],
-    "lines": 36
+    "lines": 41
   },
   {
     "lecture": "9-1",
@@ -217,6 +241,20 @@
   },
   {
     "lecture": "9-1",
+    "file": "code/ep3/Result.gs",
+    "kind": "gs",
+    "purpose": "결과 화면용 서버 함수(getResult, makeReviewDocUrl, addExamEvents)",
+    "paste_to": "Result.gs",
+    "requires": [
+      "code/ep3/Code.gs",
+      "code/ep3/Score.gs",
+      "code/ep3/Notes.gs",
+      "code/ep3/Exam.gs"
+    ],
+    "lines": 38
+  },
+  {
+    "lecture": "9-1",
     "file": "code/ep3/sample_quiz.csv",
     "kind": "csv",
     "purpose": "Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)",
@@ -249,7 +287,7 @@
     "purpose": "대본 탭을 구글 슬라이드로 자동 생성(makeSlides)",
     "paste_to": "Slides.gs",
     "requires": [],
-    "lines": 67
+    "lines": 69
   },
   {
     "lecture": "9-2",
@@ -292,6 +330,30 @@
       "code/ep4/Slides.gs"
     ],
     "lines": 40
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Web.gs",
+    "kind": "gs",
+    "purpose": "발표 도우미 웹앱 doGet와 화면용 서버 함수(loadScript, checkScript, estimate, makeSlidesUrl)",
+    "paste_to": "Web.gs",
+    "requires": [
+      "code/ep4/Slides.gs",
+      "code/ep4/Check.gs",
+      "code/ep4/Timer.gs"
+    ],
+    "lines": 62
+  },
+  {
+    "lecture": "9-2",
+    "file": "code/ep4/Helper.html",
+    "kind": "html",
+    "purpose": "웹앱 화면: 대본 카드, 고칠 칸 노란 표시, 예상 발표 시간, 슬라이드 링크와 제목 목록",
+    "paste_to": "Helper.html",
+    "requires": [
+      "code/ep4/Web.gs"
+    ],
+    "lines": 156
   },
   {
     "lecture": "9-2",

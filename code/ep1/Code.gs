@@ -1,11 +1,20 @@
 // 스크랩 웹앱 (7주차 1강)
 const SHEET_NAME = '스크랩';
+const LIST_MAX = 20;
 
-// 웹앱 주소를 열면 Index 화면을 보여 줍니다
-function doGet() {
-  return HtmlService
-    .createHtmlOutputFromFile('Index')
-    .setTitle('내 스크랩')
+// ?page= 이름의 화면을 보여 줍니다(없으면 Index)
+function doGet(e) {
+  const page = (e && e.parameter.page)
+    || 'Index';
+  let out;
+  try {
+    out = HtmlService
+      .createHtmlOutputFromFile(page);
+  } catch (err) {
+    out = HtmlService
+      .createHtmlOutputFromFile('Index');
+  }
+  return out.setTitle('내 스크랩')
     .addMetaTag('viewport',
     'width=device-width, initial-scale=1');
 }
@@ -29,6 +38,27 @@ function addScrap(topic, link, quote) {
   getSheet_().appendRow(
     [topic, link, quote, new Date()]);
   return '저장했습니다';
+}
+
+// 스크랩 최신 20건을 화면용 목록으로 돌려줍니다
+function listScraps() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  const zone = Session.getScriptTimeZone();
+
+  return rows.reverse().slice(0, LIST_MAX)
+    .map(function (r) {
+      const d = r[3];
+      return {
+        topic: String(r[0]),
+        link: String(r[1]),
+        quote: String(r[2]),
+        date: d instanceof Date
+          ? Utilities.formatDate(d, zone,
+            'yyyy-MM-dd HH:mm') : String(d)
+      };
+    });
 }
 
 // 스크랩 목록을 내 메일 주소로만 보냅니다

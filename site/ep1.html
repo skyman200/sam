@@ -39,18 +39,27 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp)</li><li><code class="i">Index.html</code> 스크랩 웹앱 화면(저장·내 메일로 받기)</li><li><code class="i">Feed.gs</code> RSS 새 글 5건을 스크랩 탭에 추가(importFeed)</li><li><code class="i">Report.gs</code> 스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)</li><li><code class="i">Clean.gs</code> 스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic)</li><li><code class="i">Share.gs</code> 스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc)</li><li><code class="i">scrap_sample.csv</code> 스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)</li><li><code class="i">scrap_dup_sample.csv</code> 중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 웹앱 doGet(?page= 로 화면 선택), 저장 addScrap, 목록 listScraps, 메일 mailList</li><li><code class="i">Index.html</code> 웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시</li><li><code class="i">Feed.gs</code> RSS 새 글 5건을 스크랩 탭에 추가(importFeed)</li><li><code class="i">Report.gs</code> 스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)</li><li><code class="i">Clean.gs</code> 중복 링크 삭제(removeDuplicates), 주제별 개수(countByTopic), 화면용 cleanUp</li><li><code class="i">Share.gs</code> 스크랩을 문서로 내보내기(exportToDoc)와 화면용 exportDoc</li><li><code class="i">scrap_sample.csv</code> 스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)</li><li><code class="i">scrap_dup_sample.csv</code> 중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜)</li></ul></div>
 <div class="file" id="fep1_0"><div class="bar"><span class="n">Code.gs</span>
-<span class="p">스크랩 웹앱 서버 코드(doGet·addScrap·mailList, 메일은 MailApp) · 붙일 곳: Code.gs</span>
+<span class="p">웹앱 doGet(?page= 로 화면 선택), 저장 addScrap, 목록 listScraps, 메일 mailList · 붙일 곳: Code.gs</span>
 <button class="copy" data-t="cep1_0">복사</button><a class="dl" href="code/ep1/Code.gs" download>받기</a></div>
 <pre id="cep1_0">// 스크랩 웹앱 (7주차 1강)
 const SHEET_NAME = &#x27;스크랩&#x27;;
+const LIST_MAX = 20;
 
-// 웹앱 주소를 열면 Index 화면을 보여 줍니다
-function doGet() {
-  return HtmlService
-    .createHtmlOutputFromFile(&#x27;Index&#x27;)
-    .setTitle(&#x27;내 스크랩&#x27;)
+// ?page= 이름의 화면을 보여 줍니다(없으면 Index)
+function doGet(e) {
+  const page = (e &amp;&amp; e.parameter.page)
+    || &#x27;Index&#x27;;
+  let out;
+  try {
+    out = HtmlService
+      .createHtmlOutputFromFile(page);
+  } catch (err) {
+    out = HtmlService
+      .createHtmlOutputFromFile(&#x27;Index&#x27;);
+  }
+  return out.setTitle(&#x27;내 스크랩&#x27;)
     .addMetaTag(&#x27;viewport&#x27;,
     &#x27;width=device-width, initial-scale=1&#x27;);
 }
@@ -76,6 +85,27 @@ function addScrap(topic, link, quote) {
   return &#x27;저장했습니다&#x27;;
 }
 
+// 스크랩 최신 20건을 화면용 목록으로 돌려줍니다
+function listScraps() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  const zone = Session.getScriptTimeZone();
+
+  return rows.reverse().slice(0, LIST_MAX)
+    .map(function (r) {
+      const d = r[3];
+      return {
+        topic: String(r[0]),
+        link: String(r[1]),
+        quote: String(r[2]),
+        date: d instanceof Date
+          ? Utilities.formatDate(d, zone,
+            &#x27;yyyy-MM-dd HH:mm&#x27;) : String(d)
+      };
+    });
+}
+
 // 스크랩 목록을 내 메일 주소로만 보냅니다
 function mailList() {
   const rows = getSheet_().getDataRange()
@@ -99,29 +129,113 @@ function mailList() {
 }
 </pre></div>
 <div class="file" id="fep1_1"><div class="bar"><span class="n">Index.html</span>
-<span class="p">스크랩 웹앱 화면(저장·내 메일로 받기) · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<span class="p">웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시 · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
 <button class="copy" data-t="cep1_1">복사</button><a class="dl" href="code/ep1/Index.html" download>받기</a></div>
 <pre id="cep1_1">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta name=&quot;viewport&quot;
+  content=&quot;width=device-width,
+  initial-scale=1&quot;&gt;
 &lt;style&gt;
-body { font-family: sans-serif;
-  padding: 16px; }
-input, textarea, button { width: 100%;
-  font-size: 18px; padding: 12px;
-  margin: 6px 0; box-sizing: border-box; }
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --mark: #FFE066; --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+    &quot;Malgun Gothic&quot;, sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 32px; font-weight: 600;
+  line-height: 1.2; margin: 0 0 4px; }
+h2 { font-size: 20px; font-weight: 600;
+  margin: 32px 0 12px; }
+.lead { color: var(--sub); margin: 0 0 20px; }
+.meta { color: var(--mut); font-size: 16px; }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+label { display: block; color: var(--sub);
+  font-size: 16px; margin: 12px 0 4px; }
+input, textarea { width: 100%; font: inherit;
+  padding: 12px 16px; border-radius: 10px;
+  border: 1.5px solid #8A8A85;
+  background: #fff; }
+input:focus, textarea:focus {
+  outline: 3px solid var(--blue);
+  border-color: var(--blue); }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+button.main { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+button.main:hover { background: #17407E; }
+mark { background: var(--mark);
+  color: inherit; padding: 0 4px; }
+.top { font-size: 20px; font-weight: 600;
+  margin: 0 0 4px; }
+.card a { color: var(--blue);
+  word-break: break-all; }
+.card p { margin: 4px 0; }
+.row { display: flex; gap: 12px;
+  align-items: center; margin: 8px 0; }
+.row .lab { width: 40%; flex: none; }
+.bar { background: #C9C9C4; height: 16px;
+  border-radius: 4px; }
+.bar.top { background: var(--blue); }
+.row .num { font-variant-numeric: tabular-nums; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
 &lt;/style&gt;
 &lt;/head&gt;
 
 &lt;body&gt;
-&lt;h2&gt;내 스크랩&lt;/h2&gt;
-&lt;input id=&quot;topic&quot; placeholder=&quot;주제&quot;&gt;
-&lt;input id=&quot;link&quot; placeholder=&quot;링크&quot;&gt;
-&lt;textarea id=&quot;quote&quot; rows=&quot;3&quot;
-  placeholder=&quot;인용구&quot;&gt;&lt;/textarea&gt;
-&lt;button onclick=&quot;save()&quot;&gt;저장&lt;/button&gt;
+&lt;main&gt;
+&lt;h1&gt;내 스크랩&lt;/h1&gt;
+&lt;p class=&quot;lead&quot;&gt;읽은 자료를 주제·링크·인용구로 모읍니다&lt;/p&gt;
+
+&lt;section class=&quot;card&quot;&gt;
+  &lt;label for=&quot;topic&quot;&gt;주제&lt;/label&gt;
+  &lt;input id=&quot;topic&quot;&gt;
+  &lt;label for=&quot;link&quot;&gt;링크&lt;/label&gt;
+  &lt;input id=&quot;link&quot;&gt;
+  &lt;label for=&quot;quote&quot;&gt;인용구&lt;/label&gt;
+  &lt;textarea id=&quot;quote&quot; rows=&quot;3&quot;&gt;&lt;/textarea&gt;
+  &lt;button class=&quot;main&quot; onclick=&quot;save()&quot;&gt;
+    저장&lt;/button&gt;
+  &lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
+&lt;/section&gt;
+
+&lt;h2&gt;내 스크랩 목록&lt;/h2&gt;
+&lt;div id=&quot;list&quot;&gt;&lt;/div&gt;
+
+&lt;h2&gt;정리하고 내보내기&lt;/h2&gt;
+&lt;button onclick=&quot;doClean()&quot;&gt;정리하기&lt;/button&gt;
+&lt;div id=&quot;clean&quot;&gt;&lt;/div&gt;
+&lt;button onclick=&quot;doExport()&quot;&gt;
+  문서로 내보내기&lt;/button&gt;
+&lt;div id=&quot;doc&quot;&gt;&lt;/div&gt;
 &lt;button onclick=&quot;mail()&quot;&gt;내 메일로 받기&lt;/button&gt;
-&lt;p id=&quot;msg&quot;&gt;&lt;/p&gt;
+&lt;/main&gt;
 
 &lt;script&gt;
 // 아이디로 화면 요소를 찾습니다
@@ -136,15 +250,121 @@ function show(t) {
 function fail(e) {
   show(&#x27;실패: &#x27; + e.message);
 }
+// 글(textContent)만 넣은 요소를 만듭니다
+function make(tag, text, cls) {
+  const n = document.createElement(tag);
+  n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+// http(s) 주소만 링크로, 나머지는 글로 보여 줍니다
+function linkNode(url) {
+  if (!/^https?:\/\//.test(url)) {
+    return make(&#x27;p&#x27;, url);
+  }
+  const a = make(&#x27;a&#x27;, url);
+  a.href = url;
+  a.target = &#x27;_blank&#x27;;
+  return a;
+}
 
-// [저장]을 누르면 시트에 한 줄 추가합니다
+// 스크랩 카드들을 목록 칸에 그립니다
+function drawList(items) {
+  const box = el(&#x27;list&#x27;);
+  box.textContent = &#x27;&#x27;;
+  if (items.length === 0) {
+    box.appendChild(
+      make(&#x27;p&#x27;, &#x27;스크랩이 없습니다&#x27;, &#x27;meta&#x27;));
+  }
+  items.forEach(function (s) {
+    const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+    c.appendChild(make(&#x27;p&#x27;, s.topic, &#x27;top&#x27;));
+    c.appendChild(make(&#x27;p&#x27;, s.quote));
+    c.appendChild(linkNode(s.link));
+    c.appendChild(make(&#x27;p&#x27;, s.date, &#x27;meta&#x27;));
+    box.appendChild(c);
+  });
+}
+// 시트에서 최신 목록을 다시 받아 옵니다
+function reload() {
+  google.script.run
+    .withSuccessHandler(drawList)
+    .withFailureHandler(fail)
+    .listScraps();
+}
+
+// [저장]을 누르면 한 줄 추가하고 목록을 새로 고칩니다
 function save() {
   show(&#x27;저장 중입니다&#x27;);
   google.script.run
-    .withSuccessHandler(show)
+    .withSuccessHandler(function (t) {
+      show(t);
+      el(&#x27;topic&#x27;).value = &#x27;&#x27;;
+      el(&#x27;link&#x27;).value = &#x27;&#x27;;
+      el(&#x27;quote&#x27;).value = &#x27;&#x27;;
+      reload();
+    })
     .withFailureHandler(fail)
     .addScrap(el(&#x27;topic&#x27;).value,
       el(&#x27;link&#x27;).value, el(&#x27;quote&#x27;).value);
+}
+
+// 정리 결과(삭제 건수와 주제별 막대)를 그립니다
+function drawClean(r) {
+  const box = el(&#x27;clean&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;);
+  p.appendChild(
+    make(&#x27;mark&#x27;, &#x27;중복 &#x27; + r.removed + &#x27;건 삭제&#x27;));
+  c.appendChild(p);
+  const max = Math.max(1, ...r.counts.map(
+    function (x) { return x.n; }));
+  r.counts.forEach(function (x) {
+    const row = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;row&#x27;);
+    const bar = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;bar&#x27;);
+    if (x.n === max &amp;&amp; max &gt; 1) {
+      bar.className = &#x27;bar top&#x27;;
+    }
+    bar.style.width = (x.n / max * 45) + &#x27;%&#x27;;
+    row.appendChild(make(&#x27;span&#x27;, x.topic, &#x27;lab&#x27;));
+    row.appendChild(bar);
+    row.appendChild(make(&#x27;span&#x27;, x.n, &#x27;num&#x27;));
+    c.appendChild(row);
+  });
+  box.appendChild(c);
+  reload();
+}
+// [정리하기]를 누르면 중복을 지우고 결과를 보여 줍니다
+function doClean() {
+  google.script.run
+    .withSuccessHandler(drawClean)
+    .withFailureHandler(fail)
+    .cleanUp();
+}
+
+// 만든 문서의 이름과 링크를 보여 줍니다
+function drawDoc(r) {
+  const box = el(&#x27;doc&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;, &#x27;top&#x27;);
+  p.appendChild(make(&#x27;mark&#x27;, r.title));
+  c.appendChild(p);
+  c.appendChild(make(&#x27;p&#x27;, r.n + &#x27;건&#x27;, &#x27;meta&#x27;));
+  c.appendChild(linkNode(r.url));
+  box.appendChild(c);
+}
+// [문서로 내보내기]를 누르면 문서를 만듭니다
+function doExport() {
+  show(&#x27;문서 만드는 중입니다&#x27;);
+  google.script.run
+    .withSuccessHandler(function (r) {
+      show(&#x27;&#x27;);
+      drawDoc(r);
+    })
+    .withFailureHandler(fail)
+    .exportDoc();
 }
 
 // [내 메일로 받기]를 누르면 메일을 보냅니다
@@ -155,6 +375,8 @@ function mail() {
     .withFailureHandler(fail)
     .mailList();
 }
+
+reload();
 &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
@@ -302,7 +524,7 @@ function pickDates_(rows) {
 }
 </pre></div>
 <div class="file" id="fep1_4"><div class="bar"><span class="n">Clean.gs</span>
-<span class="p">스크랩 중복 링크 줄 삭제(removeDuplicates)와 주제별 개수 세기(countByTopic) · 붙일 곳: Clean.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<span class="p">중복 링크 삭제(removeDuplicates), 주제별 개수(countByTopic), 화면용 cleanUp · 붙일 곳: Clean.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
 <button class="copy" data-t="cep1_4">복사</button><a class="dl" href="code/ep1/Clean.gs" download>받기</a></div>
 <pre id="cep1_4">// Clean.gs : 스크랩 중복 지우기와 주제별 개수
 // Code.gs 의 getSheet_ 가 먼저 필요합니다
@@ -335,7 +557,14 @@ function dupRows_(rows) {
   return found.reverse(); // 아래 줄부터 지웁니다
 }
 
-// 주제별로 스크랩이 몇 개인지 세어 보여 줍니다
+// 화면용: 중복을 지우고 주제별 개수와 함께 돌려줍니다
+function cleanUp() {
+  const removed = removeDuplicates();
+  return { removed: removed,
+    counts: countByTopic() };
+}
+
+// 주제별로 스크랩이 몇 개인지 세어 돌려줍니다
 function countByTopic() {
   const rows = getSheet_().getDataRange()
     .getValues().slice(1);
@@ -345,13 +574,15 @@ function countByTopic() {
     if (r[0] === &#x27;&#x27;) return;
     count[r[0]] = (count[r[0]] || 0) + 1;
   });
-  Object.keys(count).forEach(function (k) {
-    Logger.log(k + &#x27;: &#x27; + count[k] + &#x27;개&#x27;);
-  });
+  return Object.keys(count).map(
+    function (k) {
+      Logger.log(k + &#x27;: &#x27; + count[k] + &#x27;개&#x27;);
+      return { topic: k, n: count[k] };
+    });
 }
 </pre></div>
 <div class="file" id="fep1_5"><div class="bar"><span class="n">Share.gs</span>
-<span class="p">스크랩을 주제 순서로 구글 문서 한 개에 모으기(exportToDoc) · 붙일 곳: Share.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<span class="p">스크랩을 문서로 내보내기(exportToDoc)와 화면용 exportDoc · 붙일 곳: Share.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
 <button class="copy" data-t="cep1_5">복사</button><a class="dl" href="code/ep1/Share.gs" download>받기</a></div>
 <pre id="cep1_5">// Share.gs : 스크랩을 구글 문서 한 개로 모으기
 // Code.gs 의 getSheet_ 가 먼저 필요합니다
@@ -391,6 +622,17 @@ function addItem_(body, r) {
   body.appendParagraph(String(r[2]));
   body.appendParagraph(String(r[1]))
     .editAsText().setLinkUrl(String(r[1]));
+}
+
+// 화면용: 문서를 만들고 이름·링크·건수를 돌려줍니다
+function exportDoc() {
+  const url = exportToDoc();
+  let n = 0;
+  countByTopic().forEach(function (c) {
+    n += c.n;
+  });
+  return { url: url, title: SHARE_TITLE,
+    n: n };
 }
 </pre></div>
 <div class="file" id="fep1_6"><div class="bar"><span class="n">scrap_sample.csv</span>

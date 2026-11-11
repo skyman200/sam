@@ -3,7 +3,7 @@
 const EXAM = '시험';
 const DAYS = [14, 7, 1];
 
-// '시험' 탭 2행의 과목·시험일로 일정을 만듭니다
+// '시험' 탭 2행으로 일정을 만들고 글자 목록을 돌려줍니다
 function addExam() {
   const sh = SpreadsheetApp.getActive()
     .getSheetByName(EXAM);
@@ -16,10 +16,15 @@ function addExam() {
   }
 
   const c = CalendarApp.getDefaultCalendar();
-  DAYS.forEach(n => {
+  const zone = Session.getScriptTimeZone();
+  return DAYS.map(n => {
     const d = new Date(day.getTime());
     d.setDate(d.getDate() - n);
-    addOnce(c, 'D-' + n + ' ' + name, d);
+    const t = 'D-' + n + ' ' + name;
+    addOnce(c, t, d);
+    const ymd = Utilities.formatDate(
+      d, zone, 'yyyy-MM-dd');
+    return t + ' · ' + ymd;
   });
 }
 

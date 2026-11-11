@@ -39,7 +39,7 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong)</li><li><code class="i">Index.html</code> 퀴즈 웹앱 화면</li><li><code class="i">Exam.gs</code> 시험일 D-14·D-7·D-1을 캘린더에 등록(addExam)</li><li><code class="i">Notes.gs</code> 오답노트 탭을 &quot;복습 자료&quot; 문서 하나로 만들기(makeReviewDoc)</li><li><code class="i">Score.gs</code> 오늘 점수·정답률을 &quot;점수&quot; 탭에 기록(saveScore)과 약한 문제 상위 3개(showWeakTop3)</li><li><code class="i">Remind.gs</code> 오늘 틀린 문제 개수를 내 메일로 알림(sendRemind)과 매일 밤 9시 트리거(makeRemindTrigger)</li><li><code class="i">sample_quiz.csv</code> Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)</li><li><code class="i">sample_exam.csv</code> 시험 탭 연습 데이터(과목·시험일)</li><li><code class="i">sample_wrong.csv</code> 오답노트 연습 데이터 7행(날짜·문제·내 답·정답·해설, 오늘 날짜로 고쳐서 연습)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong)</li><li><code class="i">Index.html</code> 퀴즈 웹앱 화면: 풀이 후 점수·틀린 문제·TOP3·복습 문서·시험 일정을 화면에 표시</li><li><code class="i">Exam.gs</code> 시험일 D-14·D-7·D-1을 캘린더에 등록(addExam)</li><li><code class="i">Notes.gs</code> 오답노트 탭을 &quot;복습 자료&quot; 문서 하나로 만들기(makeReviewDoc)</li><li><code class="i">Score.gs</code> 오늘 점수·정답률을 &quot;점수&quot; 탭에 기록(saveScore)과 약한 문제 상위 3개(showWeakTop3)</li><li><code class="i">Remind.gs</code> 오늘 틀린 문제 개수를 내 메일로 알림(sendRemind)과 매일 밤 9시 트리거(makeRemindTrigger)</li><li><code class="i">Result.gs</code> 결과 화면용 서버 함수(getResult, makeReviewDocUrl, addExamEvents)</li><li><code class="i">sample_quiz.csv</code> Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식)</li><li><code class="i">sample_exam.csv</code> 시험 탭 연습 데이터(과목·시험일)</li><li><code class="i">sample_wrong.csv</code> 오답노트 연습 데이터 7행(날짜·문제·내 답·정답·해설, 오늘 날짜로 고쳐서 연습)</li></ul></div>
 <div class="file" id="fep3_0"><div class="bar"><span class="n">Code.gs</span>
 <span class="p">퀴즈 웹앱 서버 코드(doGet·getQuiz·toItem·saveWrong) · 붙일 곳: Code.gs</span>
 <button class="copy" data-t="cep3_0">복사</button><a class="dl" href="code/ep3/Code.gs" download>받기</a></div>
@@ -91,24 +91,106 @@ function saveWrong(i, pick) {
 }
 </pre></div>
 <div class="file" id="fep3_1"><div class="bar"><span class="n">Index.html</span>
-<span class="p">퀴즈 웹앱 화면 · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep3/Code.gs</span></span>
+<span class="p">퀴즈 웹앱 화면: 풀이 후 점수·틀린 문제·TOP3·복습 문서·시험 일정을 화면에 표시 · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep3/Code.gs</span></span>
 <button class="copy" data-t="cep3_1">복사</button><a class="dl" href="code/ep3/Index.html" download>받기</a></div>
 <pre id="cep3_1">&lt;!DOCTYPE html&gt;
-&lt;html&gt;&lt;head&gt;&lt;base target=&quot;_top&quot;&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta name=&quot;viewport&quot;
+  content=&quot;width=device-width,
+  initial-scale=1&quot;&gt;
 &lt;style&gt;
-body{font-family:sans-serif;padding:16px}
-button{display:block;width:100%;
-  margin:8px 0;padding:14px;font-size:18px}
-#msg{font-size:20px}
-&lt;/style&gt;&lt;/head&gt;&lt;body&gt;
-&lt;h3 id=&quot;q&quot;&gt;불러오는 중&lt;/h3&gt;
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --bad: #B3261E; --mark: #FFE066;
+  --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+    &quot;Malgun Gothic&quot;, sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 600;
+  line-height: 1.3; margin: 0 0 16px; }
+h2 { font-size: 20px; font-weight: 600;
+  margin: 32px 0 12px; }
+.meta { color: var(--mut); font-size: 16px; }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:disabled { color: var(--mut);
+  border-color: #8A8A85; cursor: default; }
+button:disabled:hover { background: #fff; }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+#ch button { text-align: left;
+  font-weight: 500; }
+#ch button.right { color: var(--ink);
+  background: #E6EEF9;
+  border-color: var(--blue); }
+#ch button.miss { color: var(--ink);
+  border-color: var(--bad); }
+#go { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+#go:hover { background: #17407E; }
+#msg:not(:empty) { background: #fff;
+  border: 2px solid var(--blue);
+  border-radius: 12px; padding: 16px 20px;
+  margin: 16px 0 0; }
+#msg.no { border-color: var(--bad); }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+.card div { margin-top: 4px; }
+.ans { font-weight: 600; }
+.big { font-size: 56px; font-weight: 600;
+  line-height: 1.1; margin: 8px 0 4px;
+  font-variant-numeric: tabular-nums; }
+mark { background: var(--mark);
+  color: inherit; padding: 0 8px; }
+a { color: var(--blue);
+  word-break: break-all; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main&gt;
+&lt;h1 id=&quot;q&quot;&gt;불러오는 중&lt;/h1&gt;
 &lt;div id=&quot;ch&quot;&gt;&lt;/div&gt;&lt;p id=&quot;msg&quot;&gt;&lt;/p&gt;
 
 &lt;button id=&quot;go&quot; onclick=&quot;goNext()&quot;
   style=&quot;display:none&quot;&gt;다음 문제&lt;/button&gt;
+&lt;button id=&quot;rs&quot; onclick=&quot;showResult()&quot;
+  style=&quot;display:none&quot;&gt;내 결과 보기&lt;/button&gt;
+&lt;div id=&quot;out&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;tools&quot; style=&quot;display:none&quot;&gt;
+  &lt;button onclick=&quot;makeDoc()&quot;&gt;
+    복습 문서 만들기&lt;/button&gt;&lt;div id=&quot;doc&quot;&gt;&lt;/div&gt;
+  &lt;button onclick=&quot;regExam()&quot;&gt;
+    시험 일정 등록&lt;/button&gt;&lt;div id=&quot;exam&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;/main&gt;
 &lt;script&gt;
 const $ = id =&gt; document.getElementById(id);
-let quiz = [], n = 0, score = 0;
+let quiz = [], n = 0, score = 0, mine = [];
+let pending = 0, ended = false;
 google.script.run
   .withSuccessHandler(start)
   .withFailureHandler(fail)
@@ -147,9 +229,14 @@ function addBtn(text, no) {
 function pick(no) {
   const it = quiz[n];
   document.querySelectorAll(&#x27;#ch button&#x27;)
-    .forEach(b =&gt; { b.disabled = true; });
+    .forEach((b, i) =&gt; {
+      b.disabled = true;
+      if (i + 1 === it.ans) b.className = &#x27;right&#x27;;
+      else if (i + 1 === no) b.className = &#x27;miss&#x27;;
+    });
   if (no === it.ans) {
     score++;
+    $(&#x27;msg&#x27;).className = &#x27;&#x27;;
     $(&#x27;msg&#x27;).textContent = &#x27;정답. &#x27; + it.exp;
   } else { wrong(it, no); }
   $(&#x27;go&#x27;).style.display = &#x27;block&#x27;;
@@ -162,19 +249,108 @@ function goNext() {
   $(&#x27;q&#x27;).textContent = &#x27;점수 &#x27; + score
     + &#x27; / &#x27; + quiz.length;
   $(&#x27;ch&#x27;).innerHTML = &#x27;&#x27;;
-  $(&#x27;msg&#x27;).textContent = &#x27;틀린 문제는 오답노트에&#x27;;
+  $(&#x27;msg&#x27;).textContent = &#x27;&#x27;;
   $(&#x27;go&#x27;).style.display = &#x27;none&#x27;;
+  ended = true;
+  $(&#x27;rs&#x27;).style.display = &#x27;block&#x27;;
+  if (pending === 0) showResult();
 }
 
 // 오답이면 정답을 알리고 시트에 저장합니다
 function wrong(it, no) {
+  mine.push({ q: it.q, mine: no,
+    answer: it.ans, why: it.exp });
+  $(&#x27;msg&#x27;).className = &#x27;no&#x27;;
   $(&#x27;msg&#x27;).textContent = &#x27;오답. 정답은 &#x27;
     + it.ans + &#x27;번. &#x27; + it.exp;
-  google.script.run.withFailureHandler(fail)
+  pending++;
+  google.script.run.withSuccessHandler(saved)
+    .withFailureHandler(e =&gt; {
+      saved(); fail(e);
+    })
     .saveWrong(n, no);
 }
+
+// 저장이 다 끝나면 결과 화면을 보여 줍니다
+function saved() {
+  pending--;
+  if (ended &amp;&amp; pending === 0) showResult();
+}
+
+// 서버에서 결과를 받아 화면에 그립니다
+function showResult() {
+  google.script.run.withSuccessHandler(draw)
+    .withFailureHandler(fail).getResult();
+}
+
+// 태그 하나를 만들어 글자(textContent)를 넣습니다
+function add(box, tag, text, cls) {
+  const e = document.createElement(tag);
+  e.textContent = text;
+  if (cls) e.className = cls;
+  box.appendChild(e);
+  return e;
+}
+
+// 점수·틀린 문제·TOP3 를 그립니다
+function draw(r) {
+  const o = $(&#x27;out&#x27;);
+  o.innerHTML = &#x27;&#x27;;
+  const my = ended;
+  const sc = my ? score : r.score;
+  const tot = my ? quiz.length : r.total;
+  const wr = my ? mine : r.wrongs;
+  const big = add(o, &#x27;div&#x27;, &#x27;&#x27;, &#x27;big&#x27;);
+  add(big, &#x27;mark&#x27;, sc + &#x27; / &#x27; + tot);
+  add(o, &#x27;div&#x27;, &#x27;정답률 &#x27;
+    + Math.round(sc / tot * 100) + &#x27;%&#x27;, &#x27;meta&#x27;);
+  add(o, &#x27;h2&#x27;, &#x27;틀린 문제 &#x27; + wr.length + &#x27;개&#x27;);
+  wr.forEach(w =&gt; wrongCard(o, w));
+  add(o, &#x27;h2&#x27;, &#x27;가장 자주 틀린 문제 TOP3&#x27;);
+  r.top3.forEach((t, i) =&gt; add(o, &#x27;div&#x27;,
+    (i + 1) + &#x27;위 &#x27; + t.n + &#x27;번 · &#x27;
+    + t.q, &#x27;card&#x27;));
+  $(&#x27;tools&#x27;).style.display = &#x27;block&#x27;;
+}
+
+// 틀린 문제 한 개를 카드로 그립니다
+function wrongCard(o, w) {
+  const c = add(o, &#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const it = quiz.find(x =&gt; x.q === w.q);
+  const say = no =&gt; no + &#x27;번&#x27;
+    + (it ? &#x27; &#x27; + it.ch[no - 1] : &#x27;&#x27;);
+  add(c, &#x27;b&#x27;, w.q);
+  add(c, &#x27;div&#x27;, &#x27;내 답: &#x27; + say(w.mine));
+  add(c, &#x27;div&#x27;, &#x27;정답: &#x27; + say(w.answer), &#x27;ans&#x27;);
+  add(c, &#x27;div&#x27;, &#x27;해설: &#x27; + w.why, &#x27;meta&#x27;);
+}
+
+// 복습 문서를 만들고 링크를 보여 줍니다
+function makeDoc() {
+  $(&#x27;doc&#x27;).textContent = &#x27;만드는 중...&#x27;;
+  google.script.run.withFailureHandler(fail)
+    .withSuccessHandler(url =&gt; {
+      $(&#x27;doc&#x27;).textContent = &#x27;&#x27;;
+      const a = add($(&#x27;doc&#x27;), &#x27;a&#x27;,
+        &#x27;복습 문서 열기&#x27;);
+      if (/^https:/.test(url)) a.href = url;
+      a.target = &#x27;_blank&#x27;;
+    }).makeReviewDocUrl();
+}
+
+// 시험 일정을 등록하고 날짜 목록을 보여 줍니다
+function regExam() {
+  $(&#x27;exam&#x27;).textContent = &#x27;등록 중...&#x27;;
+  google.script.run.withFailureHandler(fail)
+    .withSuccessHandler(list =&gt; {
+      $(&#x27;exam&#x27;).textContent = &#x27;&#x27;;
+      list.forEach(t =&gt;
+        add($(&#x27;exam&#x27;), &#x27;div&#x27;, t, &#x27;card&#x27;));
+    }).addExamEvents();
+}
 &lt;/script&gt;
-&lt;/body&gt;&lt;/html&gt;
+&lt;/body&gt;
+&lt;/html&gt;
 </pre></div>
 <div class="file" id="fep3_2"><div class="bar"><span class="n">Exam.gs</span>
 <span class="p">시험일 D-14·D-7·D-1을 캘린더에 등록(addExam) · 붙일 곳: Exam.gs</span>
@@ -184,7 +360,7 @@ function wrong(it, no) {
 const EXAM = &#x27;시험&#x27;;
 const DAYS = [14, 7, 1];
 
-// &#x27;시험&#x27; 탭 2행의 과목·시험일로 일정을 만듭니다
+// &#x27;시험&#x27; 탭 2행으로 일정을 만들고 글자 목록을 돌려줍니다
 function addExam() {
   const sh = SpreadsheetApp.getActive()
     .getSheetByName(EXAM);
@@ -197,10 +373,15 @@ function addExam() {
   }
 
   const c = CalendarApp.getDefaultCalendar();
-  DAYS.forEach(n =&gt; {
+  const zone = Session.getScriptTimeZone();
+  return DAYS.map(n =&gt; {
     const d = new Date(day.getTime());
     d.setDate(d.getDate() - n);
-    addOnce(c, &#x27;D-&#x27; + n + &#x27; &#x27; + name, d);
+    const t = &#x27;D-&#x27; + n + &#x27; &#x27; + name;
+    addOnce(c, t, d);
+    const ymd = Utilities.formatDate(
+      d, zone, &#x27;yyyy-MM-dd&#x27;);
+    return t + &#x27; · &#x27; + ymd;
   });
 }
 
@@ -234,9 +415,9 @@ function makeReviewDoc() {
     REVIEW_TITLE + &#x27; &#x27; + today);
   const body = doc.getBody();
   const H = DocumentApp.ParagraphHeading;
-  body.getParagraphs()[0]
-    .setText(REVIEW_TITLE)
-    .setHeading(H.HEADING1);
+  const first = body.getParagraphs()[0];
+  first.setText(REVIEW_TITLE);
+  first.setHeading(H.HEADING1);
   body.appendParagraph(&#x27;틀린 문제 &#x27;
     + rows.length + &#x27;개 (&#x27; + today + &#x27;)&#x27;);
 
@@ -365,10 +546,52 @@ function makeRemindTrigger() {
   Logger.log(&#x27;매일 알림 트리거를 만들었습니다&#x27;);
 }
 </pre></div>
-<div class="file" id="fep3_6"><div class="bar"><span class="n">sample_quiz.csv</span>
+<div class="file" id="fep3_6"><div class="bar"><span class="n">Result.gs</span>
+<span class="p">결과 화면용 서버 함수(getResult, makeReviewDocUrl, addExamEvents) · 붙일 곳: Result.gs <span class="tag k">먼저 필요: code/ep3/Code.gs, code/ep3/Score.gs, code/ep3/Notes.gs, code/ep3/Exam.gs</span></span>
+<button class="copy" data-t="cep3_6">복사</button><a class="dl" href="code/ep3/Result.gs" download>받기</a></div>
+<pre id="cep3_6">// Result.gs : 웹앱 결과 화면에 보낼 값 만들기
+// Code·Score·Notes·Exam 파일이 먼저 필요합니다
+// 필요 권한: 스프레드시트, 문서(Drive), 캘린더
+
+// 점수·정답률·틀린 문제·TOP3 를 객체로 돌려줍니다
+function getResult() {
+  const total = getQuiz().length;
+  const last = {}, cnt = {};
+  wrongRows_().forEach(r =&gt; {
+    last[r[1]] = r;
+    cnt[r[1]] = (cnt[r[1]] || 0) + 1;
+  });
+  const qs = Object.keys(last);
+  const wrongs = qs.map(q =&gt; ({ q: q,
+    mine: Number(last[q][2]),
+    answer: Number(last[q][3]),
+    why: String(last[q][4]) }));
+  const top3 = qs.slice()
+    .sort((a, b) =&gt; cnt[b] - cnt[a])
+    .slice(0, 3)
+    .map(q =&gt; ({ q: q, n: cnt[q] }));
+  const score = Math.max(
+    0, total - qs.length);
+  const rate = total
+    ? Math.round(score / total * 100) : 0;
+  return { score: score, total: total,
+    rate: rate, wrongs: wrongs, top3: top3 };
+}
+
+// 복습 문서를 만들고 주소 글자만 돌려줍니다
+function makeReviewDocUrl() {
+  return String(makeReviewDoc());
+}
+
+// 시험 일정을 등록하고 일정 글자 목록을 돌려줍니다
+function addExamEvents() {
+  return addExam();
+}
+</pre></div>
+<div class="file" id="fep3_7"><div class="bar"><span class="n">sample_quiz.csv</span>
 <span class="p">Quiz 탭 연습 데이터 10문항(일반 상식·IT 기초·보건 상식) · 붙일 곳: 시트의 &quot;Quiz&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep3_6">복사</button><a class="dl" href="code/ep3/sample_quiz.csv" download>받기</a></div>
-<pre id="cep3_6">﻿문제,보기1,보기2,보기3,보기4,정답,해설
+<button class="copy" data-t="cep3_7">복사</button><a class="dl" href="code/ep3/sample_quiz.csv" download>받기</a></div>
+<pre id="cep3_7">﻿문제,보기1,보기2,보기3,보기4,정답,해설
 표준 기압에서 물이 끓는 온도는 몇 도일까요?,90도,95도,100도,110도,3,1기압에서 물은 섭씨 100도에서 끓습니다.
 한글을 만든 왕은 누구일까요?,태조,세종대왕,정조,영조,2,세종대왕이 1443년에 만들고 1446년에 반포했습니다.
 지구에서 가장 넓은 바다(대양)는 무엇일까요?,대서양,인도양,북극해,태평양,4,태평양이 지구에서 가장 넓은 대양입니다.
@@ -380,16 +603,16 @@ function makeRemindTrigger() {
 혈액을 온몸으로 내보내는 기관은 무엇일까요?,폐,심장,간,위,2,심장이 펌프처럼 혈액을 온몸으로 보냅니다.
 PDF에서 PDF는 무엇의 약자일까요?,Public Data File,Print Draft Form,Personal Document File,Portable Document Format,4,PDF는 Portable Document Format의 약자입니다.
 </pre></div>
-<div class="file" id="fep3_7"><div class="bar"><span class="n">sample_exam.csv</span>
+<div class="file" id="fep3_8"><div class="bar"><span class="n">sample_exam.csv</span>
 <span class="p">시험 탭 연습 데이터(과목·시험일) · 붙일 곳: 시트의 &quot;시험&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep3_7">복사</button><a class="dl" href="code/ep3/sample_exam.csv" download>받기</a></div>
-<pre id="cep3_7">﻿과목,시험일
+<button class="copy" data-t="cep3_8">복사</button><a class="dl" href="code/ep3/sample_exam.csv" download>받기</a></div>
+<pre id="cep3_8">﻿과목,시험일
 생활 속의 AI,2026-12-14
 </pre></div>
-<div class="file" id="fep3_8"><div class="bar"><span class="n">sample_wrong.csv</span>
+<div class="file" id="fep3_9"><div class="bar"><span class="n">sample_wrong.csv</span>
 <span class="p">오답노트 연습 데이터 7행(날짜·문제·내 답·정답·해설, 오늘 날짜로 고쳐서 연습) · 붙일 곳: 시트의 &quot;오답노트&quot; 탭(파일 &gt; 가져오기)</span>
-<button class="copy" data-t="cep3_8">복사</button><a class="dl" href="code/ep3/sample_wrong.csv" download>받기</a></div>
-<pre id="cep3_8">﻿날짜,문제,내 답,정답,해설
+<button class="copy" data-t="cep3_9">복사</button><a class="dl" href="code/ep3/sample_wrong.csv" download>받기</a></div>
+<pre id="cep3_9">﻿날짜,문제,내 답,정답,해설
 2026-11-09 21:10,1바이트는 몇 비트일까요?,2,1,1바이트는 8비트입니다.
 2026-11-09 21:12,웹 주소 https의 s는 무엇을 뜻할까요?,3,2,&quot;s는 Secure의 약자로, 통신 내용을 암호로 감쌉니다.&quot;
 2026-11-10 20:40,1바이트는 몇 비트일까요?,3,1,1바이트는 8비트입니다.

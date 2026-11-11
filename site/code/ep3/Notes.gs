@@ -13,9 +13,9 @@ function makeReviewDoc() {
     REVIEW_TITLE + ' ' + today);
   const body = doc.getBody();
   const H = DocumentApp.ParagraphHeading;
-  body.getParagraphs()[0]
-    .setText(REVIEW_TITLE)
-    .setHeading(H.HEADING1);
+  const first = body.getParagraphs()[0];
+  first.setText(REVIEW_TITLE);
+  first.setHeading(H.HEADING1);
   body.appendParagraph('틀린 문제 '
     + rows.length + '개 (' + today + ')');
 

@@ -22,9 +22,9 @@ function makeScriptDoc() {
   const body = doc.getBody();
   const H = DocumentApp.ParagraphHeading;
   const G = DocumentApp.GlyphType;
-  body.getParagraphs()[0]
-    .setText(ss.getName())
-    .setHeading(H.TITLE);
+  const first = body.getParagraphs()[0];
+  first.setText(ss.getName());
+  first.setHeading(H.TITLE);
 
   items.forEach((r, i) => {
     body.appendParagraph(
