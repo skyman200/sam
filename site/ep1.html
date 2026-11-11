@@ -156,6 +156,8 @@ h2 { font-size: 20px; font-weight: 600;
   margin: 32px 0 12px; }
 .lead { color: var(--sub); margin: 0 0 20px; }
 .meta { color: var(--mut); font-size: 16px; }
+.err { color: #B3261E; font-size: 18px;
+  font-weight: 600; }
 .card { background: #fff; padding: 20px;
   border: 1px solid var(--line);
   border-radius: 12px; margin: 12px 0;
@@ -235,6 +237,7 @@ mark { background: var(--mark);
   문서로 내보내기&lt;/button&gt;
 &lt;div id=&quot;doc&quot;&gt;&lt;/div&gt;
 &lt;button onclick=&quot;mail()&quot;&gt;내 메일로 받기&lt;/button&gt;
+&lt;div id=&quot;mailed&quot;&gt;&lt;/div&gt;
 &lt;/main&gt;
 
 &lt;script&gt;
@@ -244,11 +247,13 @@ function el(id) {
 }
 // 안내 글을 화면에 보여 줍니다
 function show(t) {
+  el(&#x27;msg&#x27;).className = &#x27;meta&#x27;;
   el(&#x27;msg&#x27;).textContent = t;
 }
 // 실패하면 이유를 보여 줍니다
 function fail(e) {
   show(&#x27;실패: &#x27; + e.message);
+  el(&#x27;msg&#x27;).className = &#x27;err&#x27;;
 }
 // 글(textContent)만 넣은 요소를 만듭니다
 function make(tag, text, cls) {
@@ -367,11 +372,20 @@ function doExport() {
     .exportDoc();
 }
 
+// 메일 결과를 버튼 바로 아래에 보여 줍니다
+function drawMail(t) {
+  const box = el(&#x27;mailed&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;);
+  p.appendChild(make(&#x27;mark&#x27;, t));
+  c.appendChild(p);
+  box.appendChild(c);
+}
 // [내 메일로 받기]를 누르면 메일을 보냅니다
 function mail() {
-  show(&#x27;메일 보내는 중입니다&#x27;);
   google.script.run
-    .withSuccessHandler(show)
+    .withSuccessHandler(drawMail)
     .withFailureHandler(fail)
     .mailList();
 }
