@@ -9,7 +9,7 @@ M = json.loads((ROOT / "code/MANIFEST.json").read_text(encoding="utf-8"))
 
 EPS = {
     "7-1": ("ep1", "7주차 1강", "스크랩 웹앱과 메일 리포트", "내 자료를 한 곳에 모으고, 한 주 모은 것을 메일로 받는 웹앱을 만듭니다."),
-    "7-2": ("ep2", "7주차 2강", "필기는 표로, 요약은 셀에서", "셀에 =AI_SUMMARY(A2)를 쓰면 요약이 나오고, PDF 저장과 매일 아침 실행까지 붙입니다."),
+    "7-2": ("ep2", "7주차 2강", "필기는 표로, 요약은 셀에서", "셀에 =SAM_SUMMARY(A2)를 쓰면 요약이 나오고, PDF를 매주 저절로 저장해 폴더에 모읍니다."),
     "9-1": ("ep3", "9주차 1강", "소크라테스 튜터와 폰 CBT 퀴즈", "폰에서 푸는 퀴즈 웹앱을 만들고, 시험 일정을 내 캘린더에 넣습니다."),
     "9-2": ("ep4", "9주차 2강", "발표 과제를 말로 시켜 만든다", "발표 대본에서 슬라이드를 자동으로 만들고, 키를 안전하게 보관하는 법을 익힙니다."),
 }
@@ -103,7 +103,7 @@ def build():
 <div class="note">이 강의 파일: <ul>{names}</ul></div>
 {blocks}"""
         (SITE / f"{ep}.html").write_text(page(f"{wk} {title}", body), encoding="utf-8")
-        cards.append(f'<div class="card"><h3><span class="tag">{wk}</span></h3><b>{html.escape(title)}</b><br>{html.escape(desc)}<br><a href="{ep}.html">코드 보기 ({len(items)}개 파일)</a></div>')
+        cards.append(f'<div class="card"><h3><span class="tag">{wk}</span></h3><b>{html.escape(title)}</b><br>{html.escape(desc)}<br><a href="{ep}.html">코드 보기 (코드 {sum(x["kind"] != "csv" for x in items)}개 · 연습 파일 {sum(x["kind"] == "csv" for x in items)}개)</a></div>')
     idx = f"""<h1>생활 속의 AI 융합지식<br>실습 코드 사이트</h1>
 <p class="lead">7주차 · 9주차 4강에서 만드는 Google Apps Script 예제를 그대로 복사해서 쓸 수 있습니다.</p>
 <h2>강의별 코드</h2><div class="grid">{"".join(cards)}</div>
