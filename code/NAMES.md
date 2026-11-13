@@ -37,23 +37,24 @@ AI가 준 코드에서 `SHEET_NAME`·`doGet`·`getSheet_`·`addScrap`·`mailList
 | Notes.gs | REVIEW_TITLE, makeReviewDoc, readWrong_ |
 | Score.gs | SCORE_TAB, saveScore, showWeakTop3, wrongRows_ |
 | Remind.gs | REMIND_HOUR, sendRemind, makeRemindTrigger |
+| Maker.gs | QUIZ_MODEL, QUIZ_ASK, makeQuizFromFile, askQuiz_, readQuiz_, toRow_, testMaker |
 | Result.gs | getResult, makeReviewDocUrl, addExamEvents |
 
-겹침: 없음 (23개, 중복 0). Result.gs 는 Notes.gs·Exam.gs 의 함수를 불러 씁니다. Notes.gs·Score.gs 는 Code.gs 의 `WRONG` 을 빌려 쓰고,
+겹침: 없음 (Maker.gs 포함 30개, 중복 0 — 11/13 확인). Maker.gs 는 Code.gs 의 `QUIZ` 를 빌려 쓰고, 속성 GEMINI_API_KEY 가 필요합니다. Result.gs 는 Notes.gs·Exam.gs 의 함수를 불러 씁니다. Notes.gs·Score.gs 는 Code.gs 의 `WRONG` 을 빌려 쓰고,
 Score.gs 는 `getQuiz`(Code.gs)도 씁니다. Remind.gs 는 Score.gs 의 `wrongRows_` 를 빌려 씁니다.
 
 ## 프로젝트 C: 9주차 2강 (새 시트·새 프로젝트)
 
 | 파일 | 이름 |
 |---|---|
-| Slides.gs | SHEET_NAME, MAX_SLIDES, MAIN_COLOR, onOpen, makeSlides, addSlide |
+| Slides.gs | SHEET_NAME, MAX_SLIDES, onOpen, makeSlides (명세서: THEME, THEMES, TITLE_FONT, BODY_FONT, DECK_TITLE, SUBTITLE, PRESENTER, HEADER, CLOSING, SHOW_AGENDA, USE_LAYOUT · 내부: COLOR, WHITE, BX, BY, BW, BH, DECK, SERIES · 도우미 33개는 모두 `_`로 끝남: addSlide_, addCover_, addAgenda_, addEnd_, setBase_, newPage_, put_, box_ …) |
 | Script.gs | makeScriptDoc, pointsOf_ |
 | Keys.gs | checkKey |
 | Timer.gs | CHARS_PER_MIN, LIMIT_MIN, estimateMinutes, sumChars_ |
 | Check.gs | CHECK_COLOR, MAX_SENTENCE, highlightProblems, isBad_ |
 | Web.gs | doGet, loadScript, checkScript, estimate, makeSlidesUrl, scriptRows_ |
 
-겹침: 없음 (23개, 중복 0). Web.gs 의 doGet 때문에 이 프로젝트에 7-1·9-1 을 붙이면 안 됩니다. Script.gs·Timer.gs·Check.gs 는 Slides.gs 의 `SHEET_NAME` 을 빌려 씁니다.
+겹침: 없음 (Slides.gs 2판 포함 70개 남짓, 중복 0 — 11/13 확인). Web.gs 의 doGet 때문에 이 프로젝트에 7-1·9-1 을 붙이면 안 됩니다. Script.gs·Timer.gs·Check.gs 는 Slides.gs 의 `SHEET_NAME` 을 빌려 씁니다.
 
 ## 프로젝트 사이 주의
 

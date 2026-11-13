@@ -56,7 +56,7 @@ function estimate() {
 function makeSlidesUrl() {
   const url = makeSlides();
   const titles = scriptRows_()
-    .filter(r => r[0])
+    .filter(r => String(r[0]).trim())
     .map(r => String(r[0]));
   return { url, titles };
 }

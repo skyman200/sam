@@ -189,12 +189,23 @@
     "lecture": "9-1",
     "file": "code/ep3/Index.html",
     "kind": "html",
-    "purpose": "퀴즈 웹앱 화면: 풀이 후 점수·틀린 문제·TOP3·복습 문서·시험 일정을 화면에 표시",
+    "purpose": "퀴즈 웹앱 화면(카드뉴스 디자인): 첫 화면에서 유인물로 문제 만들기·지금 문제로 시작, 풀이 후 점수·틀린 문제·TOP3·복습 문서·시험 일정",
     "paste_to": "Index.html",
     "requires": [
       "code/ep3/Code.gs"
     ],
-    "lines": 258
+    "lines": 723
+  },
+  {
+    "lecture": "9-1",
+    "file": "code/ep3/Maker.gs",
+    "kind": "gs",
+    "purpose": "유인물(PDF·사진·TXT)로 AI가 4지선다 10문제를 만들어 Quiz 탭에 적기(makeQuizFromFile). 스크립트 속성 GEMINI_API_KEY 필요, 먼저 testMaker 실행",
+    "paste_to": "Maker.gs",
+    "requires": [
+      "code/ep3/Code.gs"
+    ],
+    "lines": 113
   },
   {
     "lecture": "9-1",
@@ -281,13 +292,22 @@
     "lines": 8
   },
   {
+    "lecture": "9-1",
+    "file": "code/ep3/sample_handout.pdf",
+    "kind": "pdf",
+    "purpose": "연습용 유인물(상식 한 장 정리). AI 채팅창이나 퀴즈 앱에 올려 문제를 만들어 본다",
+    "paste_to": "받아서 AI 채팅창 [+] > 파일로 올리기",
+    "requires": [],
+    "lines": 1
+  },
+  {
     "lecture": "9-2",
     "file": "code/ep4/Slides.gs",
     "kind": "gs",
-    "purpose": "대본 탭을 구글 슬라이드로 자동 생성(makeSlides)",
+    "purpose": "대본 탭을 디자인된 구글 슬라이드로 자동 생성(makeSlides): 표지·차례·본문·Q&A, THEME 한 줄로 색 바꾸기",
     "paste_to": "Slides.gs",
     "requires": [],
-    "lines": 69
+    "lines": 529
   },
   {
     "lecture": "9-2",
