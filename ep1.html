@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>7주차 1강 스크랩 웹앱과 메일 리포트</title><style>
+:root{--red:#D6232B;--dred:#8E1B20;--ink:#1A1A1A;--gray:#555;--line:#1A1A1A;--bg:#fff;--soft:#F3F3F3;--dot:#D4D4D4}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;
+background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+header.top{background:var(--ink);color:#fff;padding:10px 20px;font-size:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header.top a{color:#fff;text-decoration:none;border-bottom:1px solid var(--red)}
+header.top b{background:var(--red);padding:2px 8px}
+main{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:40px;line-height:1.25;margin:8px 0 6px;border-left:12px solid var(--red);padding-left:14px}
+h2{font-size:26px;margin:44px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.lead{color:var(--gray);font-size:18px;background:#fff;padding:4px 0}
+.card{background:#fff;border:1px solid var(--ink);padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card h3{margin:0 0 4px;font-size:20px}
+.tag{display:inline-block;background:var(--red);color:#fff;font-size:13px;padding:1px 8px;margin-right:6px}
+.tag.k{background:var(--ink)}
+.file{background:#fff;border:1px solid var(--ink);margin:22px 0}
+.file>.bar{display:flex;gap:8px;align-items:center;background:var(--soft);border-bottom:1px solid var(--ink);padding:8px 12px;flex-wrap:wrap}
+.bar .n{font-weight:700;font-size:18px}.bar .p{color:var(--gray);font-size:14px;flex:1;min-width:200px}
+button.copy,a.dl{font:inherit;font-size:14px;background:var(--red);color:#fff;border:0;padding:6px 14px;cursor:pointer;text-decoration:none}
+button.copy.done{background:var(--ink)}
+pre{margin:0;padding:14px 16px;background:#1A1A1A;color:#F2F2F2;overflow:auto;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:560px}
+.note{border-left:6px solid var(--red);background:#fff;padding:8px 14px;margin:14px 0;font-size:16px}
+ol.steps li{margin:6px 0}
+footer{color:var(--gray);font-size:13px;margin-top:50px}
+code.i{background:var(--soft);padding:1px 5px}
+</style></head><body>
+<header class="top"><b>SAM</b><a href="index.html">처음</a>
+<a href="ep1.html">7-1</a><a href="ep2.html">7-2</a><a href="ep3.html">9-1</a><a href="ep4.html">9-2</a></header>
+<main><h1>7주차 1강 · 스크랩 웹앱과 메일 리포트</h1>
+<p class="lead">내 자료를 한 곳에 모으고, 한 주 모은 것을 메일로 받는 웹앱을 만듭니다.</p>
+<div class="note"><b>따라 하는 순서</b></div>
+<ol class="steps">
+<li>구글 시트를 새로 만든다 (개인 구글 계정 사용).</li>
+<li>메뉴 <code class="i">확장 프로그램 &gt; Apps Script</code>를 연다.</li>
+<li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
+<li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
+</ol>
+<div class="note">이 강의 파일: <ul><li><code class="i">Code.gs</code> 웹앱 doGet(?page= 로 화면 선택), 저장 addScrap, 목록 listScraps, 메일 mailList</li><li><code class="i">Index.html</code> 웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시</li><li><code class="i">Feed.gs</code> RSS 새 글 5건을 스크랩 탭에 추가(importFeed)</li><li><code class="i">Report.gs</code> 스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger)</li><li><code class="i">Clean.gs</code> 중복 링크 삭제(removeDuplicates), 주제별 개수(countByTopic), 화면용 cleanUp</li><li><code class="i">Share.gs</code> 스크랩을 문서로 내보내기(exportToDoc)와 화면용 exportDoc</li><li><code class="i">scrap_sample.csv</code> 스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜)</li><li><code class="i">scrap_dup_sample.csv</code> 중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜)</li></ul></div>
+<div class="file" id="fep1_0"><div class="bar"><span class="n">Code.gs</span>
+<span class="p">웹앱 doGet(?page= 로 화면 선택), 저장 addScrap, 목록 listScraps, 메일 mailList · 붙일 곳: Code.gs</span>
+<button class="copy" data-t="cep1_0">복사</button><a class="dl" href="code/ep1/Code.gs" download>받기</a></div>
+<pre id="cep1_0">// 스크랩 웹앱 (7주차 1강)
+const SHEET_NAME = &#x27;스크랩&#x27;;
+const LIST_MAX = 20;
+
+// ?page= 이름의 화면을 보여 줍니다(없으면 Index)
+function doGet(e) {
+  const page = (e &amp;&amp; e.parameter.page)
+    || &#x27;Index&#x27;;
+  let out;
+  try {
+    out = HtmlService
+      .createHtmlOutputFromFile(page);
+  } catch (err) {
+    out = HtmlService
+      .createHtmlOutputFromFile(&#x27;Index&#x27;);
+  }
+  return out.setTitle(&#x27;내 스크랩&#x27;)
+    .addMetaTag(&#x27;viewport&#x27;,
+    &#x27;width=device-width, initial-scale=1&#x27;);
+}
+
+// &#x27;스크랩&#x27; 탭을 찾아 돌려줍니다(없으면 오류)
+function getSheet_() {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    throw new Error(&#x27;스크랩 탭이 없습니다&#x27;);
+  }
+  return sheet;
+}
+
+// 주제·링크·인용구와 오늘 날짜를 한 줄 저장합니다
+function addScrap(topic, link, quote) {
+  if (!topic || !link) {
+    throw new Error(&#x27;주제와 링크를 넣어 주세요&#x27;);
+  }
+  getSheet_().appendRow(
+    [topic, link, quote, new Date()]);
+  return &#x27;저장했습니다&#x27;;
+}
+
+// 스크랩 최신 20건을 화면용 목록으로 돌려줍니다
+function listScraps() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  const zone = Session.getScriptTimeZone();
+
+  return rows.reverse().slice(0, LIST_MAX)
+    .map(function (r) {
+      const d = r[3];
+      return {
+        topic: String(r[0]),
+        link: String(r[1]),
+        quote: String(r[2]),
+        date: d instanceof Date
+          ? Utilities.formatDate(d, zone,
+            &#x27;yyyy-MM-dd HH:mm&#x27;) : String(d)
+      };
+    });
+}
+
+// 스크랩 목록을 내 메일 주소로만 보냅니다
+function mailList() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1);
+  if (rows.length === 0) {
+    return &#x27;보낼 스크랩이 없습니다&#x27;;
+  }
+
+  let body = &#x27;&#x27;;
+  rows.forEach(function (r, i) {
+    body += (i + 1) + &#x27;. &#x27; + r[0] + &#x27;\n&#x27;
+      + r[1] + &#x27;\n&#x27; + r[2] + &#x27;\n\n&#x27;;
+  });
+
+  const me = Session.getEffectiveUser()
+    .getEmail();
+  MailApp.sendEmail(me,
+    &#x27;[스크랩] 내 자료 &#x27; + rows.length + &#x27;건&#x27;,
+    body);
+  return me + &#x27; 주소로 보냈습니다&#x27;;
+}
+</pre></div>
+<div class="file" id="fep1_1"><div class="bar"><span class="n">Index.html</span>
+<span class="p">웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시 · 붙일 곳: Index.html <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_1">복사</button><a class="dl" href="code/ep1/Index.html" download>받기</a></div>
+<pre id="cep1_1">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta name=&quot;viewport&quot;
+  content=&quot;width=device-width,
+  initial-scale=1&quot;&gt;
+&lt;style&gt;
+:root { --ink: #1A1A1A; --sub: #555;
+  --mut: #6B6B6B; --blue: #1F4E9A;
+  --mark: #FFE066; --paper: #F4F3EE;
+  --line: rgba(26, 26, 26, .12);
+  --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 20px 48px;
+  background: var(--paper); color: var(--ink);
+  font: 18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+    &quot;Malgun Gothic&quot;, sans-serif; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 32px; font-weight: 600;
+  line-height: 1.2; margin: 0 0 4px; }
+h2 { font-size: 20px; font-weight: 600;
+  margin: 32px 0 12px; }
+.lead { color: var(--sub); margin: 0 0 20px; }
+.meta { color: var(--mut); font-size: 16px; }
+.err { color: #B3261E; font-size: 18px;
+  font-weight: 600; }
+.card { background: #fff; padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px; margin: 12px 0;
+  animation: in .3s var(--ease) both; }
+label { display: block; color: var(--sub);
+  font-size: 16px; margin: 12px 0 4px; }
+input, textarea { width: 100%; font: inherit;
+  padding: 12px 16px; border-radius: 10px;
+  border: 1.5px solid #8A8A85;
+  background: #fff; }
+input:focus, textarea:focus {
+  outline: 3px solid var(--blue);
+  border-color: var(--blue); }
+button { display: block; width: 100%;
+  font: inherit; font-weight: 600;
+  padding: 16px 20px; margin: 12px 0 0;
+  border-radius: 10px; cursor: pointer;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--ink);
+  transition: background-color .15s var(--ease),
+    transform .15s var(--ease); }
+button:hover { background: #EDECE6; }
+button:active { transform: scale(.98); }
+button:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px; }
+button.main { background: var(--blue);
+  border-color: var(--blue); color: #fff; }
+button.main:hover { background: #17407E; }
+mark { background: var(--mark);
+  color: inherit; padding: 0 4px; }
+.top { font-size: 20px; font-weight: 600;
+  margin: 0 0 4px; }
+.card a { color: var(--blue);
+  word-break: break-all; }
+.card p { margin: 4px 0; }
+.row { display: flex; gap: 12px;
+  align-items: center; margin: 8px 0; }
+.row .lab { width: 40%; flex: none; }
+.bar { background: #C9C9C4; height: 16px;
+  border-radius: 4px; }
+.bar.top { background: var(--blue); }
+.row .num { font-variant-numeric: tabular-nums; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(8px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { animation: none; }
+}
+&lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;main&gt;
+&lt;h1&gt;내 스크랩&lt;/h1&gt;
+&lt;p class=&quot;lead&quot;&gt;읽은 자료를 주제·링크·인용구로 모읍니다&lt;/p&gt;
+
+&lt;section class=&quot;card&quot;&gt;
+  &lt;label for=&quot;topic&quot;&gt;주제&lt;/label&gt;
+  &lt;input id=&quot;topic&quot;&gt;
+  &lt;label for=&quot;link&quot;&gt;링크&lt;/label&gt;
+  &lt;input id=&quot;link&quot;&gt;
+  &lt;label for=&quot;quote&quot;&gt;인용구&lt;/label&gt;
+  &lt;textarea id=&quot;quote&quot; rows=&quot;3&quot;&gt;&lt;/textarea&gt;
+  &lt;button class=&quot;main&quot; onclick=&quot;save()&quot;&gt;
+    저장&lt;/button&gt;
+  &lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
+&lt;/section&gt;
+
+&lt;h2&gt;내 스크랩 목록&lt;/h2&gt;
+&lt;div id=&quot;list&quot;&gt;&lt;/div&gt;
+
+&lt;h2&gt;정리하고 내보내기&lt;/h2&gt;
+&lt;button onclick=&quot;doClean()&quot;&gt;정리하기&lt;/button&gt;
+&lt;div id=&quot;clean&quot;&gt;&lt;/div&gt;
+&lt;button onclick=&quot;doExport()&quot;&gt;
+  문서로 내보내기&lt;/button&gt;
+&lt;div id=&quot;doc&quot;&gt;&lt;/div&gt;
+&lt;button onclick=&quot;mail()&quot;&gt;내 메일로 받기&lt;/button&gt;
+&lt;div id=&quot;mailed&quot;&gt;&lt;/div&gt;
+&lt;/main&gt;
+
+&lt;script&gt;
+// 아이디로 화면 요소를 찾습니다
+function el(id) {
+  return document.getElementById(id);
+}
+// 안내 글을 화면에 보여 줍니다
+function show(t) {
+  el(&#x27;msg&#x27;).className = &#x27;meta&#x27;;
+  el(&#x27;msg&#x27;).textContent = t;
+}
+// 실패하면 이유를 보여 줍니다
+function fail(e) {
+  show(&#x27;실패: &#x27; + e.message);
+  el(&#x27;msg&#x27;).className = &#x27;err&#x27;;
+}
+// 글(textContent)만 넣은 요소를 만듭니다
+function make(tag, text, cls) {
+  const n = document.createElement(tag);
+  n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+// http(s) 주소만 링크로, 나머지는 글로 보여 줍니다
+function linkNode(url) {
+  if (!/^https?:\/\//.test(url)) {
+    return make(&#x27;p&#x27;, url);
+  }
+  const a = make(&#x27;a&#x27;, url);
+  a.href = url;
+  a.target = &#x27;_blank&#x27;;
+  return a;
+}
+
+// 스크랩 카드들을 목록 칸에 그립니다
+function drawList(items) {
+  const box = el(&#x27;list&#x27;);
+  box.textContent = &#x27;&#x27;;
+  if (items.length === 0) {
+    box.appendChild(
+      make(&#x27;p&#x27;, &#x27;스크랩이 없습니다&#x27;, &#x27;meta&#x27;));
+  }
+  items.forEach(function (s) {
+    const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+    c.appendChild(make(&#x27;p&#x27;, s.topic, &#x27;top&#x27;));
+    c.appendChild(make(&#x27;p&#x27;, s.quote));
+    c.appendChild(linkNode(s.link));
+    c.appendChild(make(&#x27;p&#x27;, s.date, &#x27;meta&#x27;));
+    box.appendChild(c);
+  });
+}
+// 시트에서 최신 목록을 다시 받아 옵니다
+function reload() {
+  google.script.run
+    .withSuccessHandler(drawList)
+    .withFailureHandler(fail)
+    .listScraps();
+}
+
+// [저장]을 누르면 한 줄 추가하고 목록을 새로 고칩니다
+function save() {
+  show(&#x27;저장 중입니다&#x27;);
+  google.script.run
+    .withSuccessHandler(function (t) {
+      show(t);
+      el(&#x27;topic&#x27;).value = &#x27;&#x27;;
+      el(&#x27;link&#x27;).value = &#x27;&#x27;;
+      el(&#x27;quote&#x27;).value = &#x27;&#x27;;
+      reload();
+    })
+    .withFailureHandler(fail)
+    .addScrap(el(&#x27;topic&#x27;).value,
+      el(&#x27;link&#x27;).value, el(&#x27;quote&#x27;).value);
+}
+
+// 정리 결과(삭제 건수와 주제별 막대)를 그립니다
+function drawClean(r) {
+  const box = el(&#x27;clean&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;);
+  p.appendChild(
+    make(&#x27;mark&#x27;, &#x27;중복 &#x27; + r.removed + &#x27;건 삭제&#x27;));
+  c.appendChild(p);
+  const max = Math.max(1, ...r.counts.map(
+    function (x) { return x.n; }));
+  r.counts.forEach(function (x) {
+    const row = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;row&#x27;);
+    const bar = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;bar&#x27;);
+    if (x.n === max &amp;&amp; max &gt; 1) {
+      bar.className = &#x27;bar top&#x27;;
+    }
+    bar.style.width = (x.n / max * 45) + &#x27;%&#x27;;
+    row.appendChild(make(&#x27;span&#x27;, x.topic, &#x27;lab&#x27;));
+    row.appendChild(bar);
+    row.appendChild(make(&#x27;span&#x27;, x.n, &#x27;num&#x27;));
+    c.appendChild(row);
+  });
+  box.appendChild(c);
+  reload();
+}
+// [정리하기]를 누르면 중복을 지우고 결과를 보여 줍니다
+function doClean() {
+  google.script.run
+    .withSuccessHandler(drawClean)
+    .withFailureHandler(fail)
+    .cleanUp();
+}
+
+// 만든 문서의 이름과 링크를 보여 줍니다
+function drawDoc(r) {
+  const box = el(&#x27;doc&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;, &#x27;top&#x27;);
+  p.appendChild(make(&#x27;mark&#x27;, r.title));
+  c.appendChild(p);
+  c.appendChild(make(&#x27;p&#x27;, r.n + &#x27;건&#x27;, &#x27;meta&#x27;));
+  c.appendChild(linkNode(r.url));
+  box.appendChild(c);
+}
+// [문서로 내보내기]를 누르면 문서를 만듭니다
+function doExport() {
+  show(&#x27;문서 만드는 중입니다&#x27;);
+  google.script.run
+    .withSuccessHandler(function (r) {
+      show(&#x27;&#x27;);
+      drawDoc(r);
+    })
+    .withFailureHandler(fail)
+    .exportDoc();
+}
+
+// 메일 결과를 버튼 바로 아래에 보여 줍니다
+function drawMail(t) {
+  const box = el(&#x27;mailed&#x27;);
+  box.textContent = &#x27;&#x27;;
+  const c = make(&#x27;div&#x27;, &#x27;&#x27;, &#x27;card&#x27;);
+  const p = make(&#x27;p&#x27;, &#x27;&#x27;);
+  p.appendChild(make(&#x27;mark&#x27;, t));
+  c.appendChild(p);
+  box.appendChild(c);
+}
+// [내 메일로 받기]를 누르면 메일을 보냅니다
+function mail() {
+  google.script.run
+    .withSuccessHandler(drawMail)
+    .withFailureHandler(fail)
+    .mailList();
+}
+
+reload();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+<div class="file" id="fep1_2"><div class="bar"><span class="n">Feed.gs</span>
+<span class="p">RSS 새 글 5건을 스크랩 탭에 추가(importFeed) · 붙일 곳: Feed.gs <span class="tag k">먼저 필요: code/ep1/Code.gs, site/practice/feed.xml</span></span>
+<button class="copy" data-t="cep1_2">복사</button><a class="dl" href="code/ep1/Feed.gs" download>받기</a></div>
+<pre id="cep1_2">// Feed.gs : 새 글 목록(RSS)을 읽어 스크랩에 추가
+// Code.gs의 getSheet_ 를 쓰므로
+// Code.gs가 먼저 있어야 합니다
+const FEED_URL = &#x27;https://sam.ptclinical&#x27;
+  + &#x27;.workers.dev/practice/feed.xml&#x27;;
+const FEED_COUNT = 5;
+
+// 최신 5건의 제목·링크를 &#x27;스크랩&#x27; 탭 끝에 추가합니다
+function importFeed() {
+  const items = readFeed_()
+    .slice(0, FEED_COUNT);
+  const sheet = getSheet_();
+  const known = savedLinks_(sheet);
+
+  let added = 0;
+  items.forEach(function (item) {
+    if (known.includes(item.link)) {
+      return; // 이미 저장한 링크는 건너뜁니다
+    }
+    sheet.appendRow([item.title,
+      item.link, &#x27;&#x27;, new Date()]);
+    added++;
+  });
+
+  Logger.log(added + &#x27;건 추가했습니다&#x27;);
+  return added;
+}
+
+// 주소에서 RSS를 받아 제목·링크 목록으로 바꿉니다
+function readFeed_() {
+  const res = UrlFetchApp.fetch(FEED_URL,
+    { muteHttpExceptions: true });
+  const code = res.getResponseCode();
+  if (code !== 200) {
+    throw new Error(&#x27;피드 오류 &#x27; + code);
+  }
+
+  const xml = res.getContentText(&#x27;UTF-8&#x27;);
+  const root = XmlService.parse(xml)
+    .getRootElement();
+  const channel = root.getChild(&#x27;channel&#x27;);
+  if (!channel) {
+    throw new Error(&#x27;RSS 형식이 아닙니다&#x27;);
+  }
+  return channel.getChildren(&#x27;item&#x27;)
+    .map(function (e) {
+      return {
+        title: e.getChildText(&#x27;title&#x27;),
+        link: e.getChildText(&#x27;link&#x27;)
+      };
+    });
+}
+
+// 시트에 이미 있는 링크(B열)를 목록으로 모읍니다
+function savedLinks_(sheet) {
+  const last = sheet.getLastRow();
+  if (last &lt; 2) {
+    return [];
+  }
+  return sheet.getRange(2, 2, last - 1, 1)
+    .getValues()
+    .map(function (r) {
+      return String(r[0]);
+    });
+}
+</pre></div>
+<div class="file" id="fep1_3"><div class="bar"><span class="n">Report.gs</span>
+<span class="p">스크랩 개수·최근 날짜 주간 보고 메일(weeklyReport)과 월요일 트리거(makeWeeklyTrigger) · 붙일 곳: Report.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_3">복사</button><a class="dl" href="code/ep1/Report.gs" download>받기</a></div>
+<pre id="cep1_3">// Report.gs : 스크랩 현황을 요약해 매주 메일로 보냄
+// Code.gs의 getSheet_ 를 쓰므로
+// Code.gs가 먼저 있어야 합니다
+const REPORT_HOUR = 8;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// 스크랩 개수와 최근 저장일을 내 메일로 보냅니다
+function weeklyReport() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  const dates = pickDates_(rows);
+  const zone = Session.getScriptTimeZone();
+
+  let latest = &#x27;날짜 없음&#x27;;
+  if (dates.length &gt; 0) {
+    const last = new Date(
+      Math.max.apply(null, dates));
+    latest = Utilities.formatDate(
+      last, zone, &#x27;yyyy-MM-dd&#x27;);
+  }
+
+  const weekAgo = new Date(
+    Date.now() - WEEK_MS);
+  const recent = dates.filter(function (d) {
+    return d &gt;= weekAgo;
+  });
+  const today = Utilities.formatDate(
+    new Date(), zone, &#x27;yyyy-MM-dd&#x27;);
+
+  const body = &#x27;전체 스크랩: &#x27;
+    + rows.length + &#x27;건\n&#x27;
+    + &#x27;최근 7일: &#x27; + recent.length + &#x27;건\n&#x27;
+    + &#x27;가장 최근 저장일: &#x27; + latest + &#x27;\n&#x27;;
+  const me = Session.getEffectiveUser()
+    .getEmail();
+  MailApp.sendEmail(me,
+    &#x27;[주간 보고] &#x27; + today, body);
+  Logger.log(me + &#x27; 주소로 보냈습니다&#x27;);
+}
+
+// 매주 월요일 아침 weeklyReport 가 돌게 예약합니다
+function makeWeeklyTrigger() {
+  const all = ScriptApp.getProjectTriggers();
+  for (const t of all) {
+    const name = t.getHandlerFunction();
+    if (name === &#x27;weeklyReport&#x27;) {
+      ScriptApp.deleteTrigger(t);
+    }
+  }
+
+  ScriptApp.newTrigger(&#x27;weeklyReport&#x27;)
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(REPORT_HOUR)
+    .create();
+  Logger.log(&#x27;주간 트리거를 만들었습니다&#x27;);
+}
+
+// 각 줄의 날짜(D열)만 모읍니다(잘못된 값은 뺌)
+function pickDates_(rows) {
+  return rows
+    .map(function (r) {
+      return new Date(r[3]);
+    })
+    .filter(function (d) {
+      return !isNaN(d.getTime());
+    });
+}
+</pre></div>
+<div class="file" id="fep1_4"><div class="bar"><span class="n">Clean.gs</span>
+<span class="p">중복 링크 삭제(removeDuplicates), 주제별 개수(countByTopic), 화면용 cleanUp · 붙일 곳: Clean.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_4">복사</button><a class="dl" href="code/ep1/Clean.gs" download>받기</a></div>
+<pre id="cep1_4">// Clean.gs : 스크랩 중복 지우기와 주제별 개수
+// Code.gs 의 getSheet_ 가 먼저 필요합니다
+// 필요 권한: 구글 스프레드시트 읽기·쓰기
+
+// 같은 링크가 또 나오면 뒤쪽 줄을 지웁니다
+function removeDuplicates() {
+  const sheet = getSheet_();
+  const all = sheet.getDataRange()
+    .getValues();
+  const dups = dupRows_(all);
+
+  dups.forEach(function (n) {
+    sheet.deleteRow(n);
+  });
+  Logger.log(dups.length + &#x27;개 줄을 지웠습니다&#x27;);
+  return dups.length;
+}
+
+// 앞에서 이미 본 링크의 줄 번호를 모읍니다
+function dupRows_(rows) {
+  const seen = {};
+  const found = [];
+
+  for (let i = 1; i &lt; rows.length; i++) {
+    const link = String(rows[i][1]).trim();
+    if (seen[link]) found.push(i + 1);
+    else if (link) seen[link] = true;
+  }
+  return found.reverse(); // 아래 줄부터 지웁니다
+}
+
+// 화면용: 중복을 지우고 주제별 개수와 함께 돌려줍니다
+function cleanUp() {
+  const removed = removeDuplicates();
+  return { removed: removed,
+    counts: countByTopic() };
+}
+
+// 주제별로 스크랩이 몇 개인지 세어 돌려줍니다
+function countByTopic() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1);
+  const count = {};
+
+  rows.forEach(function (r) {
+    if (r[0] === &#x27;&#x27;) return;
+    count[r[0]] = (count[r[0]] || 0) + 1;
+  });
+  return Object.keys(count).map(
+    function (k) {
+      Logger.log(k + &#x27;: &#x27; + count[k] + &#x27;개&#x27;);
+      return { topic: k, n: count[k] };
+    });
+}
+</pre></div>
+<div class="file" id="fep1_5"><div class="bar"><span class="n">Share.gs</span>
+<span class="p">스크랩을 문서로 내보내기(exportToDoc)와 화면용 exportDoc · 붙일 곳: Share.gs <span class="tag k">먼저 필요: code/ep1/Code.gs</span></span>
+<button class="copy" data-t="cep1_5">복사</button><a class="dl" href="code/ep1/Share.gs" download>받기</a></div>
+<pre id="cep1_5">// Share.gs : 스크랩을 구글 문서 한 개로 모으기
+// Code.gs 의 getSheet_ 가 먼저 필요합니다
+// 필요 권한: 스프레드시트 읽기, 구글 문서 만들기
+const SHARE_TITLE = &#x27;스크랩 모음&#x27;;
+
+// 주제 순서대로 스크랩을 문서 한 개에 담습니다
+function exportToDoc() {
+  const rows = getSheet_().getDataRange()
+    .getValues().slice(1)
+    .filter(function (r) { return r[0]; });
+  if (rows.length === 0) {
+    throw new Error(&#x27;보낼 스크랩이 없습니다&#x27;);
+  }
+
+  rows.sort(function (a, b) {
+    return String(a[0]).localeCompare(
+      String(b[0]));
+  });
+
+  const doc = DocumentApp.create(
+    SHARE_TITLE);
+  rows.forEach(function (r) {
+    addItem_(doc.getBody(), r);
+  });
+  const url = doc.getUrl();
+  doc.saveAndClose();
+  Logger.log(&#x27;문서 완성: &#x27; + url);
+  return url;
+}
+
+// 문서에 스크랩 한 건(주제·인용구·링크)을 적습니다
+function addItem_(body, r) {
+  const H = DocumentApp.ParagraphHeading;
+  body.appendParagraph(String(r[0]))
+    .setHeading(H.HEADING2);
+  body.appendParagraph(String(r[2]));
+  body.appendParagraph(String(r[1]))
+    .editAsText().setLinkUrl(String(r[1]));
+}
+
+// 화면용: 문서를 만들고 이름·링크·건수를 돌려줍니다
+function exportDoc() {
+  const url = exportToDoc();
+  let n = 0;
+  countByTopic().forEach(function (c) {
+    n += c.n;
+  });
+  return { url: url, title: SHARE_TITLE,
+    n: n };
+}
+</pre></div>
+<div class="file" id="fep1_6"><div class="bar"><span class="n">scrap_sample.csv</span>
+<span class="p">스크랩 시트 연습 데이터 6행(주제·링크·인용구·날짜) · 붙일 곳: 시트의 &quot;스크랩&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep1_6">복사</button><a class="dl" href="practice/scrap_sample.csv" download>받기</a></div>
+<pre id="cep1_6">﻿주제,링크,인용구,날짜
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-02
+출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-03
+복습 간격,https://sam.ptclinical.workers.dev/practice/a3.html,&quot;하루 뒤, 사흘 뒤, 일주일 뒤에 나누어 보는 편이 기억에 오래 남는다고 알려져 있다.&quot;,2026-11-04
+AI 요약 점검,https://sam.ptclinical.workers.dev/practice/a4.html,&quot;원문과 나란히 놓고 숫자, 이름, 날짜를 먼저 비교한다.&quot;,2026-11-05
+시험 계획,https://sam.ptclinical.workers.dev/practice/a5.html,시험일에서 거꾸로 계획을 세운다.,2026-11-06
+질문 만들기,https://sam.ptclinical.workers.dev/practice/a6.html,대답하지 못하는 질문이 바로 더 공부할 곳이다.,2026-11-09
+</pre></div>
+<div class="file" id="fep1_7"><div class="bar"><span class="n">scrap_dup_sample.csv</span>
+<span class="p">중복 링크 연습 데이터 8행(같은 링크 3건 중복, 주제·링크·인용구·날짜) · 붙일 곳: 시트의 &quot;스크랩&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep1_7">복사</button><a class="dl" href="practice/scrap_dup_sample.csv" download>받기</a></div>
+<pre id="cep1_7">﻿주제,링크,인용구,날짜
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-02
+출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-03
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-04
+복습 간격,https://sam.ptclinical.workers.dev/practice/a3.html,하루 뒤 사흘 뒤 일주일 뒤에 나누어 본다.,2026-11-04
+출처 확인,https://sam.ptclinical.workers.dev/practice/a2.html,&quot;글을 모을 때는 쓴 사람, 날짜, 처음 낸 곳을 먼저 적는다.&quot;,2026-11-05
+시험 계획,https://sam.ptclinical.workers.dev/practice/a5.html,시험일에서 거꾸로 계획을 세운다.,2026-11-06
+복습 간격,https://sam.ptclinical.workers.dev/practice/a6.html,대답하지 못하는 질문이 더 공부할 곳이다.,2026-11-09
+노트 정리법,https://sam.ptclinical.workers.dev/practice/a1.html,필기는 베끼기보다 줄이기가 먼저다.,2026-11-09
+</pre></div>
+<footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
+</main><script>
+document.querySelectorAll('button.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=document.getElementById(b.dataset.t).textContent;
+function ok(){b.textContent='복사됨';b.classList.add('done');setTimeout(function(){b.textContent='복사';b.classList.remove('done')},1500)}
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok)}else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}
+})});
+</script></body></html>

@@ -1,0 +1,989 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>9주차 2강 발표 과제를 말로 시켜 만든다</title><style>
+:root{--red:#D6232B;--dred:#8E1B20;--ink:#1A1A1A;--gray:#555;--line:#1A1A1A;--bg:#fff;--soft:#F3F3F3;--dot:#D4D4D4}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;
+background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+header.top{background:var(--ink);color:#fff;padding:10px 20px;font-size:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header.top a{color:#fff;text-decoration:none;border-bottom:1px solid var(--red)}
+header.top b{background:var(--red);padding:2px 8px}
+main{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:40px;line-height:1.25;margin:8px 0 6px;border-left:12px solid var(--red);padding-left:14px}
+h2{font-size:26px;margin:44px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.lead{color:var(--gray);font-size:18px;background:#fff;padding:4px 0}
+.card{background:#fff;border:1px solid var(--ink);padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card h3{margin:0 0 4px;font-size:20px}
+.tag{display:inline-block;background:var(--red);color:#fff;font-size:13px;padding:1px 8px;margin-right:6px}
+.tag.k{background:var(--ink)}
+.file{background:#fff;border:1px solid var(--ink);margin:22px 0}
+.file>.bar{display:flex;gap:8px;align-items:center;background:var(--soft);border-bottom:1px solid var(--ink);padding:8px 12px;flex-wrap:wrap}
+.bar .n{font-weight:700;font-size:18px}.bar .p{color:var(--gray);font-size:14px;flex:1;min-width:200px}
+button.copy,a.dl{font:inherit;font-size:14px;background:var(--red);color:#fff;border:0;padding:6px 14px;cursor:pointer;text-decoration:none}
+button.copy.done{background:var(--ink)}
+pre{margin:0;padding:14px 16px;background:#1A1A1A;color:#F2F2F2;overflow:auto;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:560px}
+.note{border-left:6px solid var(--red);background:#fff;padding:8px 14px;margin:14px 0;font-size:16px}
+ol.steps li{margin:6px 0}
+footer{color:var(--gray);font-size:13px;margin-top:50px}
+code.i{background:var(--soft);padding:1px 5px}
+</style></head><body>
+<header class="top"><b>SAM</b><a href="index.html">처음</a>
+<a href="ep1.html">7-1</a><a href="ep2.html">7-2</a><a href="ep3.html">9-1</a><a href="ep4.html">9-2</a></header>
+<main><h1>9주차 2강 · 발표 과제를 말로 시켜 만든다</h1>
+<p class="lead">발표 대본에서 디자인된 슬라이드(표지·차례·본문·Q&amp;A)를 자동으로 만들고, 키를 안전하게 보관하는 법을 익힙니다.</p>
+<div class="note"><b>따라 하는 순서</b></div>
+<ol class="steps">
+<li>구글 시트를 새로 만든다 (개인 구글 계정 사용).</li>
+<li>메뉴 <code class="i">확장 프로그램 &gt; Apps Script</code>를 연다.</li>
+<li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
+<li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
+</ol>
+<div class="note">이 강의 파일: <ul><li><code class="i">Slides.gs</code> 대본 탭을 디자인된 구글 슬라이드로 자동 생성(makeSlides): 표지·차례·본문·Q&amp;A, THEME 한 줄로 색 바꾸기</li><li><code class="i">Script.gs</code> 대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc)</li><li><code class="i">Keys.gs</code> PropertiesService 복습 3줄(checkKey)</li><li><code class="i">Timer.gs</code> 대본 글자 수로 발표 시간 계산(estimateMinutes)과 길이 경고</li><li><code class="i">Check.gs</code> 대본 탭의 빈 칸·너무 긴 문장을 노란색으로 칠하기(highlightProblems)</li><li><code class="i">Web.gs</code> 발표 도우미 웹앱 doGet와 화면용 서버 함수(loadScript, checkScript, estimate, makeSlidesUrl)</li><li><code class="i">Helper.html</code> 웹앱 화면: 대본 카드, 고칠 칸 노란 표시, 예상 발표 시간, 슬라이드 링크와 제목 목록</li><li><code class="i">sample_script.csv</code> 발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말)</li><li><code class="i">sample_check.csv</code> 대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함)</li></ul></div>
+<div class="file" id="fep4_0"><div class="bar"><span class="n">Slides.gs</span>
+<span class="p">대본 탭을 디자인된 구글 슬라이드로 자동 생성(makeSlides): 표지·차례·본문·Q&amp;A, THEME 한 줄로 색 바꾸기 · 붙일 곳: Slides.gs</span>
+<button class="copy" data-t="cep4_0">복사</button><a class="dl" href="code/ep4/Slides.gs" download>받기</a></div>
+<pre id="cep4_0">// Slides.gs : &#x27;대본&#x27; 탭 → 디자인된 발표 슬라이드
+const SHEET_NAME = &#x27;대본&#x27;;
+const MAX_SLIDES = 20;
+
+// 디자인 명세서: 이 몇 줄만 바꾸면 전체가 바뀝니다
+const THEME = &#x27;파랑&#x27;; // 파랑 · 남색 · 숲색 · 먹색
+const TITLE_FONT = &#x27;Noto Sans KR&#x27;; // 제목 글꼴
+const BODY_FONT = &#x27;Noto Sans KR&#x27;;  // 본문 글꼴
+const DECK_TITLE = &#x27;&#x27;; // 비우면 파일 이름을 씁니다
+const SUBTITLE = &#x27;&#x27;;   // 표지 제목 아래 한 줄
+const PRESENTER = &#x27;&#x27;;  // 표지에 넣을 발표자 이름
+const HEADER = &#x27;PRESENTATION&#x27;; // 왼쪽 위 작은 글
+const CLOSING = &#x27;감사합니다.&#x27;;
+const SHOW_AGENDA = true; // 차례 장을 넣을지
+const USE_LAYOUT = true;  // 틀을 바탕 틀에 한 번만 그림
+
+// 색 세트: bg 쪽 바탕, main 대표 색, pale 옅은 면,
+// dot 점선, ink 글자, sub 보조 글
+const THEMES = {
+  &#x27;파랑&#x27;: { bg: &#x27;#EFE9E0&#x27;, main: &#x27;#1865C6&#x27;,
+    pale: &#x27;#EAF3FC&#x27;, dot: &#x27;#9DBFE8&#x27;,
+    ink: &#x27;#1F1B1B&#x27;, sub: &#x27;#6F747C&#x27; },
+  &#x27;남색&#x27;: { bg: &#x27;#ECE8DF&#x27;, main: &#x27;#21324B&#x27;,
+    pale: &#x27;#E9EDF3&#x27;, dot: &#x27;#AEB9CA&#x27;,
+    ink: &#x27;#1C1F24&#x27;, sub: &#x27;#6B7078&#x27; },
+  &#x27;숲색&#x27;: { bg: &#x27;#ECEADF&#x27;, main: &#x27;#2F5D43&#x27;,
+    pale: &#x27;#E8F0EA&#x27;, dot: &#x27;#B1C8B8&#x27;,
+    ink: &#x27;#1B211D&#x27;, sub: &#x27;#687068&#x27; },
+  &#x27;먹색&#x27;: { bg: &#x27;#EAE8E3&#x27;, main: &#x27;#333333&#x27;,
+    pale: &#x27;#EFEEEB&#x27;, dot: &#x27;#BDBBB6&#x27;,
+    ink: &#x27;#1A1A1A&#x27;, sub: &#x27;#707070&#x27; }
+};
+const COLOR = THEMES[THEME] || THEMES[&#x27;파랑&#x27;];
+const WHITE = &#x27;#FFFFFF&#x27;;
+// 본문 상자: 왼쪽 100, 위 110, 폭 520, 높이 248
+const BX = 100, BY = 110, BW = 520, BH = 248;
+const DECK = { n: 0, name: &#x27;&#x27;, day: &#x27;&#x27;, base: null };
+// &#x27;도구 1. 이름&#x27;, &#x27;2단계: 이름&#x27; 같은 제목 찾기
+const SERIES = new RegExp(&#x27;^(\\D{0,10}?)\\s*&#x27; +
+  &#x27;(\\d{1,2})(\\D{0,3}?)\\s*[.:)\\-]\\s+(.+)$&#x27;);
+
+// 시트를 열면 &#x27;발표 도우미&#x27; 메뉴를 만듭니다
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu(&#x27;발표 도우미&#x27;)
+    .addItem(&#x27;슬라이드 만들기&#x27;, &#x27;makeSlides&#x27;)
+    .addToUi();
+}
+
+// 표지, 차례, 대본 줄마다 한 장, 맺음 장을 만듭니다
+function makeSlides() {
+  const ss = SpreadsheetApp
+    .getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    throw new Error(&#x27;대본 탭이 없습니다.&#x27;);
+  }
+  // 보이는 글 그대로 읽어 &#x27;3/4&#x27;가 날짜로 안 바뀌게
+  const rows = sh.getDataRange()
+    .getDisplayValues();
+  rows.shift(); // 1행(머리글)은 뺀다
+  const items = rows.filter(r =&gt; r[0].trim());
+
+  if (items.length === 0) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+  if (items.length &gt; MAX_SLIDES) {
+    throw new Error(MAX_SLIDES
+      + &#x27;장 이하로 줄이세요.&#x27;);
+  }
+  DECK.n = items.length;
+  DECK.name = DECK_TITLE || ss.getName();
+  DECK.day = Utilities.formatDate(new Date(),
+    ss.getSpreadsheetTimeZone(), &#x27;yyyy.MM.dd&#x27;);
+  const deck = SlidesApp.create(
+    &#x27;발표 초안 - &#x27; + ss.getName());
+  const blank = deck.getSlides()[0];
+  setBase_(deck);
+  addCover_(deck);
+  if (SHOW_AGENDA &amp;&amp; items.length &gt; 3) {
+    addAgenda_(deck, items);
+  }
+  items.forEach((r, i) =&gt;
+    addSlide_(deck, r, i + 1));
+  addEnd_(deck);
+
+  blank.remove(); // 빈 첫 장 지우기
+  const url = deck.getUrl();
+  console.log(&#x27;완성: &#x27; + url);
+  try { // 웹앱에서는 알림이 없어도 됩니다
+    ss.toast(&#x27;내 드라이브에 저장했습니다&#x27;, &#x27;완성&#x27;, 10);
+  } catch (e) {}
+  return url;
+}
+
+// 한 장: 제목을 놓고, 내용 모양에 맞는 본문을 고릅니다
+function addSlide_(deck, r, no) {
+  const s = newPage_(deck);
+  const title = String(r[0]).trim();
+  let lines = String(r[1]).split(&#x27;/&#x27;)
+    .map(v =&gt; v.trim()).filter(v =&gt; v);
+  const m0 = title.match(SERIES); // 앞말은 한글만
+  const m = m0 &amp;&amp; /^[가-힣\s]*$/.test(m0[1])
+    ? m0 : null;
+  let y = BY, h = BH;
+  if (lines.length === 0) { // 제목만: 강조 장
+    layBig_(s, title, 70, 286);
+  } else {
+    head_(s, m ? m[4] : title);
+    if (isLead_(lines)) { // 긴 첫 줄은 요약 띠로
+      layLead_(s, lines[0], y);
+      lines = lines.slice(1);
+      y += 58;
+      h -= 58;
+    }
+    layBody_(s, lines, m, no, y, h);
+  }
+  put_(s, pad_(no) + &#x27; / &#x27; + pad_(DECK.n), 604, 352,
+    70, 18, { z: 8, c: COLOR.sub, a: &#x27;R&#x27; });
+  if (r[2]) { // 발표할 말은 발표자 노트에
+    s.getNotesPage().getSpeakerNotesShape()
+      .getText().setText(String(r[2]));
+  }
+}
+
+// 줄 수·길이·제목 모양으로 본문 모양을 고릅니다
+function layBody_(s, lines, m, no, y, h) {
+  const k = lines.length, ps = lines.map(parts_);
+  const wide = Math.max(...lines.map(em_));
+  const tiny = ps.every(
+    v =&gt; em_(v[0]) &lt;= 9 &amp;&amp; em_(v[1]) &lt;= 24);
+  if (m) {                 // 번호 붙은 제목: 나눔 장
+    laySplit_(s, m, lines, y, h);
+  } else if (k === 1) {    // 한 줄: 강조 장
+    layBig_(s, lines[0], y, h);
+  } else if (no === DECK.n &amp;&amp; k &lt;= 4) { // 끝: 번호 요약
+    panel_(s, BX, y, BW, h, COLOR.pale, 10);
+    layRows_(s, lines, BX + 70, y + 12, BW - 140,
+      h - 24, &#x27;num&#x27;);
+  } else if (k === 3 &amp;&amp; tiny) { // 짧은 3줄: 원 3개
+    layCircles_(s, ps, y, h);
+  } else if (k &lt;= 3 &amp;&amp; wide &lt;= [0, 0, 48, 30][k]) {
+    layCards_(s, ps, y, h); // 2~3줄: 카드
+  } else if (k === 4 &amp;&amp; wide &lt;= 36) { // 4줄: 2x2 격자
+    layGrid_(s, ps, y, h);
+  } else {                 // 5줄부터: 체크·번호 목록
+    layRows_(s, lines, BX + 10, y, BW - 20, h,
+      k &lt;= 6 ? &#x27;tick&#x27; : &#x27;num&#x27;);
+  }
+}
+
+// 표지: 제목을 두 줄로 나눠 앞줄만 대표 색으로
+function addCover_(deck) {
+  const s = newPage_(deck);
+  const ab = halves_(DECK.name);
+  const z = fit_(em_(ab[0]) &gt; em_(ab[1]) ? ab[0]
+    : ab[1], 540, 66, [44, 38, 32, 26, 22]);
+  const lh = z * 1.3, mid = 162;
+  const o = { f: TITLE_FONT, z: z, b: true, a: &#x27;C&#x27; };
+  const top = ab[1] ? mid - lh : mid - lh / 2;
+  put_(s, ab[0], 80, top, 560, lh,
+    Object.assign({ c: COLOR.main }, o));
+  put_(s, ab[1], 80, mid, 560, lh, o);
+  const y = top + (ab[1] ? 2 : 1) * lh + 12;
+  put_(s, SUBTITLE || DECK.n + &#x27;장 발표 자료&#x27;,
+    100, y, 520, 24, { z: 12, a: &#x27;C&#x27; });
+  if (!PRESENTER) return;
+  box_(s, &#x27;R&#x27;, 349, y + 38, 22, 1.5, COLOR.ink);
+  put_(s, PRESENTER, 100, y + 48, 520, 24,
+    { z: 12, a: &#x27;C&#x27; });
+}
+
+// 차례: 제목마다 점선 테두리 띠와 번호 원
+function addAgenda_(deck, items) {
+  const s = newPage_(deck);
+  const n = items.length, cols = n &gt; 5 ? 2 : 1;
+  const per = Math.ceil(n / cols);
+  const gap = per &gt; 7 ? 4 : 8;
+  const w = cols === 2 ? 254 : 400;
+  const x0 = cols === 2 ? BX : 160;
+  const rh = Math.min(40,
+    (BH - gap * (per - 1)) / per);
+  const z = Math.max(9, Math.min(15, rh * 0.42));
+  const y0 = BY + (BH - per * (rh + gap) + gap) / 2;
+  head_(s, &#x27;차례&#x27;);
+  items.forEach((r, i) =&gt; {
+    const x = x0 + Math.floor(i / per) * (w + 12);
+    const y = y0 + (i % per) * (rh + gap);
+    box_(s, &#x27;RR&#x27;, x, y, w, rh, COLOR.pale,
+      [COLOR.dot, 1, 1]);
+    num_(s, i + 1, x + 22, y + rh / 2,
+      Math.min(18, rh - 6));
+    put_(s, cut_(String(r[0]).trim(), (w - 70) / z),
+      x + 40, y, w - 46, rh, { z: z });
+  });
+}
+
+// 맺음 장: Q &amp; A 와 인사말
+function addEnd_(deck) {
+  const s = newPage_(deck);
+  put_(s, &#x27;Q &amp; A&#x27;, 110, 122, 500, 84,
+    { f: TITLE_FONT, z: 54, b: true, a: &#x27;C&#x27; });
+  put_(s, CLOSING, 110, 212, 500, 40,
+    { z: 22, b: true, a: &#x27;C&#x27; });
+}
+
+// 강조 장: 큰 둥근 면에 한 문장 (물음이면 짙은 면)
+function layBig_(s, text, y, h) {
+  const dark = /[?？]$/.test(text);
+  const ph = Math.min(h, 170);
+  const py = y + (h - ph) / 2;
+  panel_(s, BX, py, BW, ph,
+    dark ? COLOR.main : COLOR.pale, 10);
+  put_(s, text, BX + 30, py, BW - 60, ph,
+    { b: true, a: &#x27;C&#x27;, c: dark ? WHITE : COLOR.main,
+      z: fit_(text, BW - 60, ph - 30,
+        [30, 26, 22, 20, 18, 16, 14]) });
+}
+
+// 요약 띠: 본문 맨 위의 옅은 띠에 긴 첫 줄
+function layLead_(s, text, y) {
+  panel_(s, BX, y, BW, 46, COLOR.pale, 8);
+  put_(s, text, BX + 16, y, BW - 32, 46,
+    { b: true, a: &#x27;C&#x27;, z: fit_(text, BW - 32, 40,
+      [14, 13, 12, 11]) });
+}
+
+// 카드: 옅은 면 안에 흰 카드 2~3장
+function layCards_(s, ps, y, h) {
+  const n = ps.length, ph = Math.min(h, 196);
+  const py = y + (h - ph) / 2;
+  const w = (BW - 28 - 12 * (n - 1)) / n;
+  const z = fit_(longest_(ps.map(v =&gt; v[0])), w - 24,
+    ps.some(v =&gt; v[1]) ? 50 : ph - 100,
+    [22, 20, 18, 16, 14, 12]);
+  panel_(s, BX, py, BW, ph, COLOR.pale, 10);
+  ps.forEach((v, i) =&gt; {
+    const x = BX + 14 + i * (w + 12);
+    panel_(s, x, py + 14, w, ph - 28, WHITE, 10);
+    num_(s, i + 1, x + w / 2, py + 40, 20);
+    stack_(s, v, x + 10, py + 56, w - 20,
+      ph - 80, z);
+  });
+}
+
+// 원 3개: 짧은 세 줄을 옅은 원 안에
+function layCircles_(s, ps, y, h) {
+  const d = Math.min(h, 164);
+  const top = y + (h - d) / 2;
+  const z = fit_(longest_(ps.map(v =&gt; v[0])),
+    d * 0.72, 30, [18, 16, 14, 12]);
+  ps.forEach((v, i) =&gt; {
+    const cx = BX + BW * (2 * i + 1) / 6;
+    box_(s, &#x27;O&#x27;, cx - d / 2, top, d, d, COLOR.pale);
+    stack_(s, v, cx - d * 0.38, top + d * 0.18,
+      d * 0.76, d * 0.64, z);
+  });
+}
+
+// 2x2 격자: 점선 십자로 나눈 네 칸
+function layGrid_(s, ps, y, h) {
+  const cw = BW / 2, ch = h / 2;
+  const any = ps.some(v =&gt; v[1]);
+  const z = fit_(longest_(ps.map(v =&gt; v[0])),
+    (any ? 0.38 : 1) * (cw - 60), ch - 30,
+    [18, 16, 14, 13, 12]);
+  dots_(s, BX + cw, y + 6, BX + cw, y + h - 6);
+  dots_(s, BX, y + ch, BX + BW, y + ch);
+  ps.forEach((v, i) =&gt; {
+    const x = BX + (i % 2) * cw + 10;
+    const cy = y + Math.floor(i / 2) * ch;
+    num_(s, i + 1, x + 10, cy + ch / 2, 18);
+    pair_(s, v, x + 28, cy, cw - 48, ch, z, any);
+  });
+}
+
+// 나눔 장: 왼쪽 옅은 면에 큰 번호, 오른쪽에 체크 목록
+function laySplit_(s, m, lines, y, h) {
+  const mid = y + h / 2;
+  panel_(s, BX, y, 150, h, COLOR.pale, 10);
+  put_(s, (m[1] + m[3]).trim(), BX, mid - 76, 150,
+    24, { z: 13, c: COLOR.sub, b: true, a: &#x27;C&#x27; });
+  put_(s, m[2], BX, mid - 58, 150, 124,
+    { f: TITLE_FONT, z: 84, c: COLOR.main,
+      b: true, a: &#x27;C&#x27; });
+  layRows_(s, lines, BX + 174, y, BW - 174, h,
+    &#x27;tick&#x27;);
+}
+
+// 목록: 줄마다 체크(또는 번호 원)와 글, 사이는 점선
+function layRows_(s, lines, x, y, w, h, mark) {
+  const n = lines.length, cols = n &gt; 6 ? 2 : 1;
+  const per = Math.ceil(n / cols);
+  const cw = (w - 24 * (cols - 1)) / cols;
+  const rh = Math.min(n === 1 ? 112 : 64, h / per);
+  const y0 = y + (h - rh * per) / 2;
+  const ps = lines.map(parts_);
+  const any = ps.some(v =&gt; v[1]);
+  const z = fit_(longest_(ps.map(v =&gt; v[0])),
+    (any ? 0.38 : 1) * (cw - 32), rh - 8,
+    [20, 18, 16, 14, 13, 12, 11, 10, 9]);
+  ps.forEach((v, i) =&gt; {
+    const cx = x + Math.floor(i / per) * (cw + 24);
+    const cy = y0 + (i % per) * rh;
+    if (i % per) dots_(s, cx, cy, cx + cw, cy);
+    if (mark === &#x27;tick&#x27;) {
+      tick_(s, cx + 10, cy + rh / 2);
+    } else {
+      num_(s, i + 1, cx + 10, cy + rh / 2,
+        Math.min(18, rh - 6));
+    }
+    pair_(s, v, cx + 26, cy, cw - 26, rh, z, any);
+  });
+}
+
+// 가운데 쌓기: 굵은 핵심어 아래 작은 설명
+function stack_(s, v, x, y, w, h, z) {
+  const o = { z: z, c: COLOR.main, b: true, a: &#x27;C&#x27; };
+  if (!v[1]) return put_(s, v[0], x, y, w, h, o);
+  o.v = &#x27;B&#x27;;
+  put_(s, v[0], x, y, w, h * 0.45, o);
+  put_(s, v[1], x, y + h * 0.45, w, h * 0.55,
+    { z: Math.max(10, z * 0.62), c: COLOR.sub,
+      a: &#x27;C&#x27;, v: &#x27;T&#x27; });
+}
+
+// 나란히 놓기: 굵은 핵심어 옆에 작은 설명
+function pair_(s, v, x, y, w, h, z, any) {
+  const hw = any ? w * 0.38 : w;
+  put_(s, v[0], x, y, hw, h, { z: z, b: true,
+    c: any ? COLOR.main : COLOR.ink });
+  put_(s, v[1], x + hw + 4, y, w - hw - 4, h,
+    { z: Math.max(10, z * 0.72), c: COLOR.sub });
+}
+
+// 장 제목: 가운데 정렬, 굵게
+function head_(s, title) {
+  put_(s, title, 70, 58, 580, 44, { f: TITLE_FONT,
+    b: true, a: &#x27;C&#x27;,
+    z: fit_(title, 560, 40, [24, 22, 20, 18, 16]) });
+}
+
+// 틀: 바탕, 대표 색 틀, 흰 카드, 클립, 머리 글
+function drawFrame_(p) {
+  p.getBackground().setSolidFill(COLOR.bg);
+  panel_(p, 22, 26, 676, 357, COLOR.main, 10);
+  panel_(p, 32, 36, 656, 337, WHITE, 6);
+  box_(p, &#x27;R&#x27;, 284, 30, 152, 20, WHITE,
+    [COLOR.ink, 2]);
+  box_(p, &#x27;R&#x27;, 274, 21, 172, 11, COLOR.ink);
+  box_(p, &#x27;O&#x27;, 268.5, 21, 11, 11, COLOR.ink);
+  box_(p, &#x27;O&#x27;, 440.5, 21, 11, 11, COLOR.ink);
+  put_(p, HEADER, 46, 42, 220, 18,
+    { z: 8, c: COLOR.sub });
+  put_(p, DECK.day, 474, 42, 200, 18,
+    { z: 8, c: COLOR.sub, a: &#x27;R&#x27; });
+}
+
+// 틀을 &#x27;빈 화면&#x27; 바탕 틀에 한 번만 그려 둡니다
+function setBase_(deck) {
+  DECK.base = null;
+  if (!USE_LAYOUT) return;
+  DECK.base = deck.getLayouts().filter(
+    v =&gt; v.getLayoutName() === &#x27;BLANK&#x27;)[0] || null;
+  if (!DECK.base) return;
+  try { drawFrame_(DECK.base); }
+  catch (e) { DECK.base = null; } // 장마다 그림
+}
+
+// 새 장: 바탕 틀이 없으면 장마다 틀을 그립니다
+function newPage_(deck) {
+  const s = deck.appendSlide(DECK.base ||
+    SlidesApp.PredefinedLayout.BLANK);
+  s.getBackground().setSolidFill(COLOR.bg);
+  if (!DECK.base) drawFrame_(s);
+  return s;
+}
+
+// 둥근 면: 모서리 반지름을 r로 맞춥니다
+// (둥근 네모의 반지름은 짧은 변의 1/6이라, 높이 6r짜리
+//  띠 둘을 위아래에 놓고 가운데를 네모로 메웁니다)
+function panel_(p, x, y, w, h, fill, r) {
+  const t = Math.min(6 * r, h, w);
+  if (t &gt;= h) return box_(p, &#x27;RR&#x27;, x, y, w, h, fill);
+  box_(p, &#x27;RR&#x27;, x, y, w, t, fill);
+  box_(p, &#x27;RR&#x27;, x, y + h - t, w, t, fill);
+  box_(p, &#x27;R&#x27;, x, y + t / 6, w, h - t / 3, fill);
+}
+
+// 도형 하나: kind &#x27;R&#x27; 네모, &#x27;RR&#x27; 둥근 네모, &#x27;O&#x27; 원
+// edge = [색, 굵기, 점선이면 1] (없으면 테두리 없음)
+function box_(p, kind, x, y, w, h, fill, edge) {
+  const T = SlidesApp.ShapeType;
+  const r = p.insertShape(kind === &#x27;O&#x27; ? T.ELLIPSE
+    : kind === &#x27;RR&#x27; ? T.ROUND_RECTANGLE
+      : T.RECTANGLE, x, y, w, h);
+  r.getFill().setSolidFill(fill);
+  const b = r.getBorder();
+  if (!edge) {
+    b.setTransparent();
+    return r;
+  }
+  b.setWeight(edge[1]);
+  b.getLineFill().setSolidFill(edge[0]);
+  if (edge[2]) {
+    b.setDashStyle(SlidesApp.DashStyle.DASH);
+  }
+  return r;
+}
+
+// 점선 하나
+function dots_(p, x1, y1, x2, y2) {
+  const l = p.insertLine(
+    SlidesApp.LineCategory.STRAIGHT,
+    x1, y1, x2, y2);
+  l.setWeight(1);
+  l.setDashStyle(SlidesApp.DashStyle.DOT);
+  l.getLineFill().setSolidFill(COLOR.dot);
+}
+
+// 번호 원: 흰 원 + 가는 테두리 + 숫자
+function num_(p, n, cx, cy, d) {
+  box_(p, &#x27;O&#x27;, cx - d / 2, cy - d / 2, d, d,
+    WHITE, [COLOR.sub, 0.75]);
+  put_(p, n, cx - 15, cy - 12, 30, 24,
+    { z: d * 0.5, a: &#x27;C&#x27; });
+}
+
+// 체크: 대표 색 원 위에 흰 막대 둘(글리프 안 씀)
+function tick_(p, cx, cy) {
+  box_(p, &#x27;O&#x27;, cx - 8, cy - 8, 16, 16, COLOR.main);
+  box_(p, &#x27;R&#x27;, cx - 5.3, cy + 0.3, 5, 1.8, WHITE)
+    .setRotation(45);
+  box_(p, &#x27;R&#x27;, cx - 2.3, cy - 1.1, 9, 1.8, WHITE)
+    .setRotation(315);
+}
+
+// 글상자: o = {f 글꼴, z 크기, c 색, b 굵게,
+//   a:&#x27;C&#x27; 가운데·&#x27;R&#x27; 오른쪽, v:&#x27;T&#x27; 위·&#x27;B&#x27; 아래}
+function put_(p, text, x, y, w, h, o) {
+  if (text === &#x27;&#x27; || text == null) return null;
+  const tb = p.insertTextBox(String(text),
+    x, y, w, h);
+  const A = SlidesApp.ContentAlignment;
+  const P = SlidesApp.ParagraphAlignment;
+  tb.setContentAlignment(o.v === &#x27;B&#x27; ? A.BOTTOM
+    : o.v === &#x27;T&#x27; ? A.TOP : A.MIDDLE);
+  const t = tb.getText();
+  t.getTextStyle()
+    .setFontFamily(o.f || BODY_FONT)
+    .setFontSize(o.z).setBold(!!o.b)
+    .setForegroundColor(o.c || COLOR.ink);
+  if (o.a) {
+    t.getParagraphStyle().setParagraphAlignment(
+      o.a === &#x27;C&#x27; ? P.CENTER : P.END);
+  }
+  return tb;
+}
+
+// &#x27;핵심어: 설명&#x27; 을 [핵심어, 설명] 으로 나눕니다
+function parts_(t) {
+  const m = t.match(
+    /^(.{1,14}?)(?::\s+|\s+[-–—]\s+)(.+)$/);
+  return m ? [m[1], m[2]] : [t, &#x27;&#x27;];
+}
+
+// 첫 줄이 나머지보다 훨씬 길면 요약 문장으로 봅니다
+function isLead_(lines) {
+  const rest = lines.slice(1).map(em_);
+  return lines.length &gt; 2 &amp;&amp; em_(lines[0]) &gt;= 16
+    &amp;&amp; em_(lines[0]) &gt;= 1.5 * Math.max(...rest);
+}
+
+// 제목을 길이가 비슷한 두 줄로 나눕니다
+function halves_(t) {
+  const w = t.split(&#x27; &#x27;);
+  if (w.length &lt; 2 || em_(t) &lt;= 8) return [t, &#x27;&#x27;];
+  let k = 1;
+  for (let i = 1; i &lt; w.length; i++) {
+    const a = em_(w.slice(0, i).join(&#x27; &#x27;));
+    const b = em_(w.slice(0, k).join(&#x27; &#x27;));
+    if (Math.abs(em_(t) - 2 * a)
+      &lt; Math.abs(em_(t) - 2 * b)) k = i;
+  }
+  return [w.slice(0, k).join(&#x27; &#x27;),
+    w.slice(k).join(&#x27; &#x27;)];
+}
+
+// 폭이 max를 넘는 글은 줄이고 … 를 붙입니다
+function cut_(t, max) {
+  if (em_(t) &lt;= max) return t;
+  while (t &amp;&amp; em_(t) &gt; max - 1) t = t.slice(0, -1);
+  return t.trim() + &#x27;…&#x27;;
+}
+
+// 가장 폭이 넓은 글 하나
+function longest_(list) {
+  return list.reduce(
+    (a, b) =&gt; em_(b) &gt; em_(a) ? b : a, &#x27;&#x27;);
+}
+
+// 글의 폭 어림: 한글 1, 영문·숫자는 절반쯤
+function em_(t) {
+  let n = 0;
+  for (const ch of String(t)) {
+    n += ch.charCodeAt(0) &gt; 0x2E7F ? 1
+      : ch === &#x27; &#x27; ? 0.3
+      : /[A-Z0-9]/.test(ch) ? 0.62 : 0.5;
+  }
+  return n;
+}
+
+// 폭 w 안에서 몇 줄이 되는지 어림합니다
+function rowsOf_(t, z, w) {
+  return Math.max(1,
+    Math.ceil(em_(t) * z * 1.1 / (w - 14)));
+}
+
+// 높이 h 안에 들어가는 가장 큰 글자 크기를 고릅니다
+function fit_(t, w, h, sizes) {
+  return sizes.find(
+    z =&gt; rowsOf_(t, z, w) * z * 1.5 &lt;= h)
+    || sizes[sizes.length - 1];
+}
+
+// 1 → &#x27;01&#x27; 처럼 두 자리로 맞춥니다
+function pad_(n) {
+  return (&#x27;0&#x27; + n).slice(-2);
+}
+</pre></div>
+<div class="file" id="fep4_1"><div class="bar"><span class="n">Script.gs</span>
+<span class="p">대본 탭을 발표 대본 문서로 내보내기(makeScriptDoc) · 붙일 곳: Script.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs</span></span>
+<button class="copy" data-t="cep4_1">복사</button><a class="dl" href="code/ep4/Script.gs" download>받기</a></div>
+<pre id="cep4_1">// Script.gs : &#x27;대본&#x27; 탭을 발표 대본 문서로 내보내기
+// Slides.gs의 SHEET_NAME 을 쓰므로
+// Slides.gs가 먼저 있어야 합니다
+
+// 대본 탭의 제목·핵심·발표할 말을 문서 한 개로 만듭니다
+function makeScriptDoc() {
+  const ss = SpreadsheetApp
+    .getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHEET_NAME);
+  if (!sh) {
+    throw new Error(&#x27;대본 탭이 없습니다.&#x27;);
+  }
+  const rows = sh.getDataRange().getValues();
+  rows.shift(); // 1행(머리글)은 뺀다
+  const items = rows.filter(r =&gt; r[0]);
+  if (items.length === 0) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+
+  const doc = DocumentApp.create(
+    &#x27;발표 대본 - &#x27; + ss.getName());
+  const body = doc.getBody();
+  const H = DocumentApp.ParagraphHeading;
+  const G = DocumentApp.GlyphType;
+  const first = body.getParagraphs()[0];
+  first.setText(ss.getName());
+  first.setHeading(H.TITLE);
+
+  items.forEach((r, i) =&gt; {
+    body.appendParagraph(
+      (i + 1) + &#x27;. &#x27; + r[0])
+      .setHeading(H.HEADING2);
+    pointsOf_(r[1]).forEach(p =&gt; {
+      body.appendListItem(p)
+        .setGlyphType(G.BULLET);
+    });
+    if (r[2]) {
+      body.appendParagraph(&#x27;발표할 말: &#x27; + r[2]);
+    }
+  });
+
+  const url = doc.getUrl();
+  doc.saveAndClose();
+  console.log(&#x27;대본 완성: &#x27; + url);
+  return url;
+}
+
+// B열 글을 &#x27;/&#x27; 기준으로 잘라 핵심 문장 목록으로
+function pointsOf_(cell) {
+  return String(cell).split(&#x27;/&#x27;)
+    .map(v =&gt; v.trim())
+    .filter(v =&gt; v !== &#x27;&#x27;);
+}
+</pre></div>
+<div class="file" id="fep4_2"><div class="bar"><span class="n">Keys.gs</span>
+<span class="p">PropertiesService 복습 3줄(checkKey) · 붙일 곳: Keys.gs</span>
+<button class="copy" data-t="cep4_2">복사</button><a class="dl" href="code/ep4/Keys.gs" download>받기</a></div>
+<pre id="cep4_2">// Keys.gs : 스크립트 속성 복습(7주차 2강과 같은 3줄)
+// 키 값은 코드에 쓰지 않고 [프로젝트 설정]의 속성에 둡니다
+
+// 속성에서 키를 꺼내 있는지만 확인합니다(값은 안 보임)
+function checkKey() {
+  const key = PropertiesService
+    .getScriptProperties()
+    .getProperty(&#x27;GEMINI_API_KEY&#x27;);
+  console.log(key ? &#x27;키가 있습니다&#x27; : &#x27;키가 없습니다&#x27;);
+}
+</pre></div>
+<div class="file" id="fep4_3"><div class="bar"><span class="n">Timer.gs</span>
+<span class="p">대본 글자 수로 발표 시간 계산(estimateMinutes)과 길이 경고 · 붙일 곳: Timer.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs</span></span>
+<button class="copy" data-t="cep4_3">복사</button><a class="dl" href="code/ep4/Timer.gs" download>받기</a></div>
+<pre id="cep4_3">// Timer.gs : 대본 글자 수로 발표 시간 계산
+// Slides.gs 의 SHEET_NAME 이 먼저 필요합니다
+// 필요 권한: 구글 스프레드시트 읽기
+const CHARS_PER_MIN = 350; // 1분에 말하는 글자 수
+const LIMIT_MIN = 0.5; // 제한 시간(분), 바꿔 쓰기
+
+// 발표할 말(C열) 글자 수를 시간으로 바꿉니다
+function estimateMinutes() {
+  const sh = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+  if (!sh) {
+    throw new Error(&#x27;대본 탭이 없습니다.&#x27;);
+  }
+
+  const rows = sh.getDataRange().getValues();
+  rows.shift(); // 1행(머리글)은 뺀다
+  const chars = sumChars_(rows);
+  const min = Math.round(
+    chars / CHARS_PER_MIN * 10) / 10;
+
+  console.log(chars + &#x27;자 = 약 &#x27; + min + &#x27;분&#x27;);
+  if (min &gt; LIMIT_MIN) {
+    console.log(&#x27;경고: &#x27; + LIMIT_MIN
+      + &#x27;분을 넘었습니다.&#x27;);
+  }
+  return min;
+}
+
+// 모든 줄의 발표할 말 글자 수를 더합니다
+function sumChars_(rows) {
+  let sum = 0;
+  rows.forEach(r =&gt; {
+    sum += String(r[2]).replace(/\s/g, &#x27;&#x27;)
+      .length;
+  });
+  return sum;
+}
+</pre></div>
+<div class="file" id="fep4_4"><div class="bar"><span class="n">Check.gs</span>
+<span class="p">대본 탭의 빈 칸·너무 긴 문장을 노란색으로 칠하기(highlightProblems) · 붙일 곳: Check.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs</span></span>
+<button class="copy" data-t="cep4_4">복사</button><a class="dl" href="code/ep4/Check.gs" download>받기</a></div>
+<pre id="cep4_4">// Check.gs : 빈 칸·너무 긴 문장을 노란색으로 칠하기
+// Slides.gs 의 SHEET_NAME 이 먼저 필요합니다
+// 필요 권한: 구글 스프레드시트 읽기·쓰기
+const CHECK_COLOR = &#x27;#FFF176&#x27;; // 노란색
+const MAX_SENTENCE = 60; // 한 문장 최대 글자 수
+
+// 대본 탭에서 고칠 칸을 찾아 노란색으로 칠합니다
+function highlightProblems() {
+  const sh = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+  if (!sh || sh.getLastRow() &lt; 2) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+
+  const n = sh.getLastRow() - 1;
+  const range = sh.getRange(2, 1, n, 3);
+  range.setBackground(null); // 지난번 색을 지운다
+  let bad = 0;
+
+  range.getValues().forEach((row, i) =&gt; {
+    row.forEach((cell, j) =&gt; {
+      if (!isBad_(cell, row)) return;
+      range.getCell(i + 1, j + 1)
+        .setBackground(CHECK_COLOR);
+      bad++;
+    });
+  });
+  console.log(&#x27;고칠 칸 &#x27; + bad + &#x27;개를 칠했습니다.&#x27;);
+}
+
+// 빈 칸이거나 한 문장이 너무 길면 true
+function isBad_(cell, row) {
+  const text = String(cell).trim();
+  if (text === &#x27;&#x27;) {
+    return row.join(&#x27;&#x27;) !== &#x27;&#x27;;
+  }
+  return text.split(/[.?!/]/).some(
+    s =&gt; s.trim().length &gt; MAX_SENTENCE);
+}
+</pre></div>
+<div class="file" id="fep4_5"><div class="bar"><span class="n">Web.gs</span>
+<span class="p">발표 도우미 웹앱 doGet와 화면용 서버 함수(loadScript, checkScript, estimate, makeSlidesUrl) · 붙일 곳: Web.gs <span class="tag k">먼저 필요: code/ep4/Slides.gs, code/ep4/Check.gs, code/ep4/Timer.gs</span></span>
+<button class="copy" data-t="cep4_5">복사</button><a class="dl" href="code/ep4/Web.gs" download>받기</a></div>
+<pre id="cep4_5">// Web.gs : 발표 도우미 웹앱 화면의 서버 함수
+// Slides.gs·Timer.gs·Check.gs 가 먼저 필요합니다
+// 필요 권한: 스프레드시트·슬라이드 (기존과 같음)
+
+// 웹앱 주소를 열면 발표 도우미 화면을 보여 줍니다
+function doGet(e) {
+  return HtmlService
+    .createHtmlOutputFromFile(&#x27;Helper&#x27;)
+    .setTitle(&#x27;발표 도우미&#x27;)
+    .addMetaTag(&#x27;viewport&#x27;,
+      &#x27;width=device-width, initial-scale=1&#x27;);
+}
+
+// 대본 탭 2행부터의 값을 모두 가져옵니다
+function scriptRows_() {
+  const sh = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName(SHEET_NAME);
+  if (!sh || sh.getLastRow() &lt; 2) {
+    throw new Error(&#x27;2행부터 대본을 적으세요.&#x27;);
+  }
+  return sh.getRange(
+    2, 1, sh.getLastRow() - 1, 3)
+    .getValues();
+}
+
+// 대본 줄마다 [제목, 내용, 발표할 말] 문자열로
+function loadScript() {
+  return scriptRows_().map(
+    r =&gt; r.map(c =&gt; String(c)));
+}
+
+// 고칠 칸 목록 [{row, col, why}] (시트는 안 칠함)
+function checkScript() {
+  const list = [];
+  scriptRows_().forEach((r, i) =&gt; {
+    r.forEach((c, j) =&gt; {
+      if (!isBad_(c, r)) return;
+      const why = String(c).trim() === &#x27;&#x27;
+        ? &#x27;빈 칸입니다&#x27;
+        : &#x27;한 문장이 &#x27; + MAX_SENTENCE
+          + &#x27;자를 넘습니다&#x27;;
+      list.push({
+        row: i + 2, col: j + 1, why });
+    });
+  });
+  return list;
+}
+
+// 예상 발표 시간(분)을 숫자로 돌려줍니다
+function estimate() {
+  return estimateMinutes();
+}
+
+// 슬라이드를 만들고 {url, titles} 를 돌려줍니다
+function makeSlidesUrl() {
+  const url = makeSlides();
+  const titles = scriptRows_()
+    .filter(r =&gt; String(r[0]).trim())
+    .map(r =&gt; String(r[0]));
+  return { url, titles };
+}
+</pre></div>
+<div class="file" id="fep4_6"><div class="bar"><span class="n">Helper.html</span>
+<span class="p">웹앱 화면: 대본 카드, 고칠 칸 노란 표시, 예상 발표 시간, 슬라이드 링크와 제목 목록 · 붙일 곳: Helper.html <span class="tag k">먼저 필요: code/ep4/Web.gs</span></span>
+<button class="copy" data-t="cep4_6">복사</button><a class="dl" href="code/ep4/Helper.html" download>받기</a></div>
+<pre id="cep4_6">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta name=&quot;viewport&quot;
+ content=&quot;width=device-width,
+ initial-scale=1&quot;&gt;
+&lt;style&gt;
+:root{--ink:#1A1A1A;--sub:#555;--mut:#6B6B6B;
+ --blue:#1F4E9A;--mark:#FFE066;
+ --paper:#F4F3EE;--line:rgba(26,26,26,.12);
+ --ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 20px 48px;
+ background:var(--paper);color:var(--ink);
+ font:18px/1.5 &quot;Apple SD Gothic Neo&quot;,
+ &quot;Malgun Gothic&quot;,sans-serif}
+main{max-width:880px;margin:0 auto}
+h1{font-size:32px;font-weight:600;
+ line-height:1.2;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.meta{color:var(--mut);font-size:16px}
+.bar{display:flex;gap:12px}
+button{flex:1;font:inherit;font-weight:600;
+ padding:16px 20px;border-radius:10px;
+ cursor:pointer;color:var(--ink);
+ background:#fff;border:2px solid var(--ink);
+ transition:background-color .15s var(--ease),
+ transform .15s var(--ease)}
+button:hover{background:#EDECE6}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:3px solid var(--blue);
+ outline-offset:2px}
+button.main{background:var(--blue);
+ border-color:var(--blue);color:#fff}
+button.main:hover{background:#17407E}
+#msg{min-height:28px;margin:16px 0 0}
+.card{background:#fff;padding:20px;
+ border:1px solid var(--line);
+ border-radius:12px;margin:12px 0;
+ animation:in .3s var(--ease) both}
+.line{display:grid;gap:12px;
+ align-items:start;
+ grid-template-columns:1fr 1.2fr 2fr}
+@media (max-width:640px){
+ .line{grid-template-columns:1fr}}
+.f{padding:8px 12px;border-radius:8px}
+.f .meta{display:block}
+.bad{background:var(--mark)}
+.bad .meta{color:var(--ink)}
+.why{font-weight:600;margin-top:4px}
+.stat{display:none}
+#time{font-size:32px;font-weight:600;
+ font-variant-numeric:tabular-nums}
+a{color:var(--blue);font-weight:600}
+#slides div{margin-top:4px}
+@keyframes in{
+ from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){
+ .card{animation:none}}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main&gt;
+&lt;h1&gt;발표 도우미&lt;/h1&gt;
+&lt;p class=&quot;lead&quot;&gt;대본을 확인하고 슬라이드를 만듭니다&lt;/p&gt;
+&lt;div class=&quot;bar&quot;&gt;
+&lt;button onclick=&quot;load()&quot;&gt;대본 불러오기&lt;/button&gt;
+&lt;button class=&quot;main&quot;
+ onclick=&quot;make()&quot;&gt;슬라이드 만들기&lt;/button&gt;
+&lt;/div&gt;
+&lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
+&lt;div id=&quot;stat&quot; class=&quot;card stat&quot;&gt;
+&lt;span class=&quot;meta&quot;&gt;예상 발표 시간&lt;/span&gt;
+&lt;div id=&quot;time&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&quot;out&quot;&gt;&lt;/div&gt;
+&lt;div id=&quot;slides&quot;&gt;&lt;/div&gt;
+&lt;/main&gt;
+&lt;script&gt;
+const NAMES = [&#x27;제목&#x27;, &#x27;내용&#x27;, &#x27;발표할 말&#x27;];
+const run = () =&gt; google.script.run
+  .withFailureHandler(
+    e =&gt; say(&#x27;오류: &#x27; + e.message));
+const $ = id =&gt; document.getElementById(id);
+const mk = (cls) =&gt; {
+  const d = document.createElement(&#x27;div&#x27;);
+  if (cls) d.className = cls;
+  return d;
+};
+function say(t) {
+  $(&#x27;msg&#x27;).textContent = t;
+}
+function load() {
+  say(&#x27;불러오는 중...&#x27;);
+  run().withSuccessHandler(rows =&gt; {
+    run().withSuccessHandler(bad =&gt; {
+      draw(rows, bad);
+      run().withSuccessHandler(m =&gt; {
+        $(&#x27;stat&#x27;).style.display = &#x27;block&#x27;;
+        $(&#x27;time&#x27;).textContent =
+          m.toFixed(1) + &#x27;분&#x27;;
+      }).estimate();
+    }).checkScript();
+  }).loadScript();
+}
+function draw(rows, bad) {
+  const out = $(&#x27;out&#x27;);
+  out.textContent = &#x27;&#x27;;
+  rows.forEach((r, i) =&gt; {
+    if (r.join(&#x27;&#x27;) === &#x27;&#x27;) return;
+    const card = mk(&#x27;card line&#x27;);
+    r.forEach((v, j) =&gt; {
+      const f = mk(&#x27;f&#x27;);
+      const b = bad.find(x =&gt;
+        x.row === i + 2 &amp;&amp; x.col === j + 1);
+      const label = mk(&#x27;meta&#x27;);
+      label.textContent = NAMES[j];
+      const val = mk();
+      val.textContent = v;
+      f.append(label, val);
+      if (b) {
+        f.className += &#x27; bad&#x27;;
+        const w = mk(&#x27;why&#x27;);
+        w.textContent = &#x27;고치기: &#x27; + b.why;
+        f.appendChild(w);
+      }
+      card.appendChild(f);
+    });
+    out.appendChild(card);
+  });
+  say(&#x27;고칠 칸 &#x27; + bad.length + &#x27;개&#x27;);
+}
+function make() {
+  say(&#x27;슬라이드 만드는 중...&#x27;);
+  run().withSuccessHandler(res =&gt; {
+    const box = $(&#x27;slides&#x27;);
+    box.textContent = &#x27;&#x27;;
+    const card = mk(&#x27;card&#x27;);
+    const a = document.createElement(&#x27;a&#x27;);
+    a.href = res.url;
+    a.target = &#x27;_blank&#x27;;
+    a.textContent = &#x27;슬라이드 열기&#x27;;
+    card.appendChild(a);
+    res.titles.forEach((t, i) =&gt; {
+      const p = mk();
+      p.textContent = (i + 1) + &#x27;. &#x27; + t;
+      card.appendChild(p);
+    });
+    box.appendChild(card);
+    say(&#x27;슬라이드를 만들었습니다&#x27;);
+  }).makeSlidesUrl();
+}
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div>
+<div class="file" id="fep4_7"><div class="bar"><span class="n">sample_script.csv</span>
+<span class="p">발표 대본 연습 데이터 8행(제목·핵심 문장·발표할 말) · 붙일 곳: 시트의 &quot;대본&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep4_7">복사</button><a class="dl" href="code/ep4/sample_script.csv" download>받기</a></div>
+<pre id="cep4_7">﻿제목,내용,발표할 말
+내가 쓰는 학습 도구,발표 주제 소개/하루 공부에 쓰는 도구 네 가지,안녕하세요. 오늘은 제가 공부할 때 쓰는 도구를 소개하겠습니다.
+왜 도구가 필요했나,필기가 흩어져 있었다/복습 시간이 부족했다,시험 기간마다 필기가 여러 곳에 흩어져서 찾는 데 시간이 많이 걸렸습니다.
+도구 1. 스프레드시트,자료를 한 표에 모은다/주제·링크·인용구를 적는다,&quot;읽은 자료는 한 표에 모읍니다. 주제와 링크, 인용구만 적어도 나중에 찾기 쉽습니다.&quot;
+도구 2. AI 요약,긴 글을 3줄로 줄인다/원문과 꼭 비교한다,긴 필기는 AI에게 3줄로 줄이게 합니다. 다만 숫자와 이름은 원문과 꼭 비교합니다.
+도구 3. 퀴즈 앱,보기 4개짜리 문제로 바꾼다/틀린 문제만 모은다,&quot;핵심 개념을 퀴즈로 바꾸고, 틀린 문제는 오답노트에 따로 모아서 다시 풀어 봅니다.&quot;
+도구 4. 캘린더,시험일 14일·7일·1일 전에 알림/복습일을 미리 정한다,&quot;시험일을 넣으면 2주 전, 1주 전, 하루 전에 알림이 뜨게 해서 막판 벼락치기를 줄입니다.&quot;
+써 보니 좋았던 점,복습 시간이 줄었다/무엇을 모르는지 보인다,&quot;정리하는 시간이 줄어든 만큼 복습에 쓸 수 있었고, 내가 모르는 부분이 눈에 보였습니다.&quot;
+정리와 질문,&quot;도구는 거들 뿐, 공부는 내가 한다/질문 받겠습니다&quot;,도구는 도와줄 뿐이고 공부는 제가 하는 것입니다. 질문 있으시면 말씀해 주세요.
+</pre></div>
+<div class="file" id="fep4_8"><div class="bar"><span class="n">sample_check.csv</span>
+<span class="p">대본 점검 연습 데이터 5행(빈 칸 2개·긴 문장 1개 포함) · 붙일 곳: 시트의 &quot;대본&quot; 탭(파일 &gt; 가져오기)</span>
+<button class="copy" data-t="cep4_8">복사</button><a class="dl" href="code/ep4/sample_check.csv" download>받기</a></div>
+<pre id="cep4_8">﻿제목,내용,발표할 말
+내가 쓰는 학습 도구,발표 주제 소개/하루 공부에 쓰는 도구 네 가지,안녕하세요. 오늘은 제가 공부할 때 쓰는 도구를 소개하겠습니다.
+왜 도구가 필요했나,,시험 기간마다 필기가 여러 곳에 흩어져서 찾는 데 시간이 많이 걸렸습니다.
+도구 1. 스프레드시트,자료를 한 표에 모은다/주제·링크·인용구를 적는다,
+도구 2. AI 요약,긴 글을 3줄로 줄인다/원문과 꼭 비교한다,&quot;긴 필기는 AI에게 3줄로 줄이게 하고 다만 숫자와 이름과 날짜는 반드시 원문과 하나씩 나란히 놓고 비교해서 틀린 곳이 없는지 확인한 다음에 발표 자료에 넣습니다.&quot;
+정리와 질문,도구는 거들 뿐/질문 받겠습니다,도구는 도와줄 뿐이고 공부는 제가 하는 것입니다. 질문 있으시면 말씀해 주세요.
+</pre></div>
+<footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
+</main><script>
+document.querySelectorAll('button.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=document.getElementById(b.dataset.t).textContent;
+function ok(){b.textContent='복사됨';b.classList.add('done');setTimeout(function(){b.textContent='복사';b.classList.remove('done')},1500)}
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok)}else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}
+})});
+</script></body></html>
