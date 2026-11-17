@@ -12,12 +12,12 @@
     "lecture": "7-1",
     "file": "code/ep1/Index.html",
     "kind": "html",
-    "purpose": "웹앱 화면: 저장하면 목록이 바로 갱신, [정리하기]·[문서로 내보내기] 결과를 화면에 표시",
+    "purpose": "웹앱 화면(SCRAPS): 새 스크랩 입력, 주제 칩으로 걸러 보는 LIBRARY 카드, [정리하기]·[문서로 내보내기]·[내 메일로 받기] 결과를 화면에 표시",
     "paste_to": "Index.html",
     "requires": [
       "code/ep1/Code.gs"
     ],
-    "lines": 249
+    "lines": 554
   },
   {
     "lecture": "7-1",
@@ -126,12 +126,12 @@
     "lecture": "7-2",
     "file": "code/ep2/Note.html",
     "kind": "html",
-    "purpose": "웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌",
+    "purpose": "웹앱 화면 ?page=Note(NOTES, 벤토 그리드): SUMMARY·TO DO·PROGRESS·IDEAS 칸과 노트 카드, 칸마다 3줄 요약과 PDF 링크를 바로 표시",
     "paste_to": "Note.html",
     "requires": [
       "code/ep2/WebSummary.gs"
     ],
-    "lines": 173
+    "lines": 712
   },
   {
     "lecture": "7-2",

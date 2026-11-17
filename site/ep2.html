@@ -39,7 +39,7 @@ code.i{background:var(--soft);padding:1px 5px}
 <li>아래 파일을 위에서부터 차례로 복사해서 붙이고 저장한다. 같은 이름의 파일이 있으면 내용을 지우고 붙인다.</li>
 <li>함수를 골라 <code class="i">실행</code>을 누르고, 권한 창에서 안내대로 진행한다.</li>
 </ol>
-<div class="note">이 강의 파일: <ul><li><code class="i">Summary.gs</code> 셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary</li><li><code class="i">SamSummary.gs</code> 키 없이 쓰는 셀 함수 SAM_SUMMARY(수업용 Cloudflare API, 캐시 사용)와 testSamSummary</li><li><code class="i">Pdf.gs</code> 시트를 PDF로 저장하고 {name,url} 반환(savePdf)</li><li><code class="i">WebSummary.gs</code> 요약 노트 화면용 서버 함수(loadNotes, summarizeNote, savePdfLink)</li><li><code class="i">Note.html</code> 웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌</li><li><code class="i">Trigger.gs</code> 매일 8시대 mailList 자동 실행 트리거(setTrigger)</li><li><code class="i">Menu.gs</code> 시트 위 &#x27;AI 도우미&#x27; 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API)</li><li><code class="i">Folder.gs</code> 드라이브 &quot;수업 PDF&quot; 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs)</li><li><code class="i">sample_notes.csv</code> AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸)</li></ul></div>
+<div class="note">이 강의 파일: <ul><li><code class="i">Summary.gs</code> 셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary</li><li><code class="i">SamSummary.gs</code> 키 없이 쓰는 셀 함수 SAM_SUMMARY(수업용 Cloudflare API, 캐시 사용)와 testSamSummary</li><li><code class="i">Pdf.gs</code> 시트를 PDF로 저장하고 {name,url} 반환(savePdf)</li><li><code class="i">WebSummary.gs</code> 요약 노트 화면용 서버 함수(loadNotes, summarizeNote, savePdfLink)</li><li><code class="i">Note.html</code> 웹앱 화면 ?page=Note(NOTES, 벤토 그리드): SUMMARY·TO DO·PROGRESS·IDEAS 칸과 노트 카드, 칸마다 3줄 요약과 PDF 링크를 바로 표시</li><li><code class="i">Trigger.gs</code> 매일 8시대 mailList 자동 실행 트리거(setTrigger)</li><li><code class="i">Menu.gs</code> 시트 위 &#x27;AI 도우미&#x27; 메뉴(onOpen)와 선택한 칸 요약(summarizeSelection, SAM API)</li><li><code class="i">Folder.gs</code> 드라이브 &quot;수업 PDF&quot; 폴더 만들기(makeFolder)와 PDF 이동·날짜 이름 붙이기(movePdfs)</li><li><code class="i">sample_notes.csv</code> AI 요약 연습용 손필기 문단 10개(주제·필기·요약 빈 칸)</li></ul></div>
 <div class="file" id="fep2_0"><div class="bar"><span class="n">Summary.gs</span>
 <span class="p">셀 함수 AI_SUMMARY(Gemini, 키는 스크립트 속성 GEMINI_API_KEY)와 testSummary · 붙일 곳: Summary.gs</span>
 <button class="copy" data-t="cep2_0">복사</button><a class="dl" href="code/ep2/Summary.gs" download>받기</a></div>
@@ -226,99 +226,449 @@ function savePdfLink() {
 }
 </pre></div>
 <div class="file" id="fep2_4"><div class="bar"><span class="n">Note.html</span>
-<span class="p">웹앱 화면 ?page=Note: 필기를 불러와 칸마다 요약 결과를 바로 표시하고 PDF 링크를 보여 줌 · 붙일 곳: Note.html <span class="tag k">먼저 필요: code/ep2/WebSummary.gs</span></span>
+<span class="p">웹앱 화면 ?page=Note(NOTES, 벤토 그리드): SUMMARY·TO DO·PROGRESS·IDEAS 칸과 노트 카드, 칸마다 3줄 요약과 PDF 링크를 바로 표시 · 붙일 곳: Note.html <span class="tag k">먼저 필요: code/ep2/WebSummary.gs</span></span>
 <button class="copy" data-t="cep2_4">복사</button><a class="dl" href="code/ep2/Note.html" download>받기</a></div>
 <pre id="cep2_4">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
+&lt;base target=&quot;_top&quot;&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
 &lt;meta name=&quot;viewport&quot;
-  content=&quot;width=device-width,
-  initial-scale=1&quot;&gt;
+  content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css&quot;&gt;
 &lt;style&gt;
-:root { --ink: #1A1A1A; --sub: #555;
-  --mut: #6B6B6B; --blue: #1F4E9A;
-  --mark: #FFF1A6; --paper: #F4F3EE;
-  --line: rgba(26, 26, 26, .12);
-  --ease: cubic-bezier(.22, 1, .36, 1); }
-* { box-sizing: border-box; }
-body { margin: 0; padding: 24px 20px 48px;
-  background: var(--paper); color: var(--ink);
-  font: 18px/1.5 &quot;Apple SD Gothic Neo&quot;,
-    &quot;Malgun Gothic&quot;, sans-serif; }
-main { max-width: 640px; margin: 0 auto; }
-h1 { font-size: 32px; font-weight: 600;
-  line-height: 1.2; margin: 0 0 4px; }
-.lead { color: var(--sub); margin: 0 0 20px; }
-.meta { color: var(--mut); font-size: 16px; }
-button { display: block; width: 100%;
-  font: inherit; font-weight: 600;
-  padding: 16px 20px; margin: 12px 0 0;
-  border-radius: 10px; cursor: pointer;
-  color: var(--ink); background: #fff;
-  border: 2px solid var(--ink);
-  transition: background-color .15s var(--ease),
-    transform .15s var(--ease); }
-button:hover { background: #EDECE6; }
-button:active { transform: scale(.98); }
-button:focus-visible {
-  outline: 3px solid var(--blue);
-  outline-offset: 2px; }
-button.main { background: var(--blue);
-  border-color: var(--blue); color: #fff; }
-button.main:hover { background: #17407E; }
-.card { background: #fff; padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 12px; margin: 12px 0;
-  animation: in .3s var(--ease) both; }
-.card p { margin: 0; }
-.sum { margin-top: 16px; padding: 12px 16px;
-  background: var(--mark); border-radius: 8px;
-  white-space: pre-wrap; }
-.sum:empty { display: none; }
-a { color: var(--blue); word-break: break-all; }
-#msg { min-height: 28px; margin: 20px 0 0; }
-@keyframes in {
-  from { opacity: 0; transform: translateY(8px); }
+/* 색과 글꼴: 흰 종이 + 옅은 세 가지 바탕(크림·분홍·하늘) */
+:root {
+  --font: &quot;Pretendard&quot;, &quot;Apple SD Gothic Neo&quot;,
+    &quot;Noto Sans KR&quot;, &quot;Malgun Gothic&quot;, sans-serif;
+  --bg: #ECEBE7; --sheet: #FFFFFF;
+  --ink: #2B2B2B; --head: #3A3A3A;
+  --sub: #6B6A66; --mut: #9A9893;
+  --rule: #4A4A4A; --line: #E3E1DC;
+  --dash: #D3D0CA;
+  --cream: #F7F3EC; --blush: #F8F1F1;
+  --mist: #EDF2F5;
+  --r: 8px;
+  --ease: cubic-bezier(.22, 1, .36, 1);
 }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.6 var(--font);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit;
+  cursor: pointer; }
+button:focus-visible, .note:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px; }
+
+/* 종이 한 장 */
+.sheet { max-width: 1120px;
+  margin: 40px auto;
+  padding: 56px 56px 72px;
+  background: var(--sheet);
+  border: 1px solid #DCDAD5; }
+
+/* 머리: NOTES 와 날짜, 굵은 선 */
+.top { display: flex; flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px; padding-bottom: 18px;
+  border-bottom: 2px solid var(--rule); }
+.top &gt; div { flex: 1 1 260px; min-width: 0; }
+h1 { margin: 0; color: var(--head);
+  font-size: clamp(48px, 8vw, 84px);
+  font-weight: 800; line-height: .9;
+  letter-spacing: -.025em; }
+.lead { margin: 12px 0 0; color: var(--sub);
+  font-size: 16px; }
+.date { margin: 0 0 6px; color: var(--head);
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .14em; }
+.date span { margin-left: 12px;
+  font-size: 16px; font-weight: 500;
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums; }
+
+/* 칸 이름표(SUMMARY, IDEAS …) */
+.label { margin: 0; color: var(--head);
+  font-size: 13px; font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase; }
+.hint { margin: 2px 0 0; color: var(--mut);
+  font-size: 14px; }
+.row { display: flex; align-items: baseline;
+  justify-content: space-between; gap: 12px; }
+
+/* 벤토 격자: 12칸 */
+.bento { display: grid; gap: 16px;
+  grid-template-columns: repeat(12, 1fr);
+  margin-top: 32px; }
+.tile { min-width: 0; padding: 24px 26px;
+  border-radius: var(--r);
+  animation: rise .5s var(--ease) both; }
+.t-sum { grid-column: span 7;
+  grid-row: span 2; background: var(--cream);
+  display: flex; flex-direction: column; }
+.t-todo { grid-column: span 5;
+  background: var(--mist);
+  animation-delay: .06s; }
+.t-stat { grid-column: span 5;
+  border: 1px solid var(--line);
+  animation-delay: .12s; }
+.t-idea { grid-column: span 12;
+  background: var(--blush);
+  animation-delay: .18s; }
+
+/* SUMMARY: 고른 노트의 3줄을 크게 */
+.idx { margin: 0; color: var(--sub);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: .08em;
+  font-variant-numeric: tabular-nums; }
+.t-sum h2 { margin: 28px 0 8px;
+  font-size: clamp(24px, 2.6vw, 30px);
+  font-weight: 700; line-height: 1.35;
+  letter-spacing: -.015em; }
+.wait { margin: 20px 0 0; color: var(--mut);
+  font-size: 20px; font-weight: 600; }
+.orig { margin-top: auto; padding-top: 32px; }
+.orig .label { font-size: 12px;
+  color: var(--sub); }
+.orig .ruled { --pg: var(--cream);
+  margin-top: 4px; color: var(--sub); }
+.lines { list-style: none; margin: 20px 0 0;
+  padding: 0; }
+.lines li { display: grid; gap: 14px;
+  grid-template-columns: 30px 1fr;
+  padding: 15px 0;
+  border-top: 1px dashed #CFC8BB;
+  font-size: 20px; font-weight: 500;
+  line-height: 1.5; }
+.lines li:last-child {
+  border-bottom: 1px dashed #CFC8BB; }
+.lines b { color: var(--mut); font-size: 13px;
+  font-weight: 700; padding-top: 4px;
+  font-variant-numeric: tabular-nums; }
+.empty { margin: auto 0; padding: 40px 0;
+  color: var(--mut); font-size: 22px;
+  font-weight: 600; line-height: 1.5; }
+.sum-foot { display: flex; gap: 8px;
+  align-items: center; padding-top: 20px; }
+.sum-foot .grow { flex: 1; }
+
+/* 작은 버튼: 테두리만 */
+.btn { padding: 8px 14px;
+  border: 1px solid #BDB9B1;
+  border-radius: 6px; background: #fff;
+  font-size: 14px; font-weight: 600;
+  transition: border-color .2s var(--ease),
+    background-color .2s var(--ease); }
+.btn:hover { border-color: var(--ink); }
+.btn:disabled { color: var(--mut);
+  border-color: var(--line); cursor: default; }
+.btn.ink { background: var(--ink);
+  border-color: var(--ink); color: #fff; }
+.btn.ink:hover { background: #000; }
+
+/* TO DO: 할 일 = 버튼 세 개 */
+.todo { list-style: none; margin: 14px 0 0;
+  padding: 0; }
+.task { display: grid; width: 100%;
+  grid-template-columns: 20px 1fr auto;
+  gap: 14px; align-items: center;
+  padding: 13px 4px; text-align: left;
+  background: none; border: 0;
+  border-bottom: 1px dashed #C9D3DA;
+  transition: background-color .2s var(--ease); }
+.task:hover { background: rgba(255,255,255,.55); }
+.task strong { display: block; font-size: 17px;
+  font-weight: 700; }
+.task small { display: block; color: var(--sub);
+  font-size: 13px; }
+.dot { width: 16px; height: 16px;
+  border: 1.5px solid #8E9AA3;
+  border-radius: 50%; position: relative; }
+.task.busy .dot { border-style: dashed;
+  border-color: var(--ink);
+  animation: spin 1.4s linear infinite; }
+.task.done .dot { background: var(--ink);
+  border-color: var(--ink); }
+.task.done .dot::after { content: &quot;&quot;;
+  position: absolute; left: 4.5px; top: 1.5px;
+  width: 4px; height: 8px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg); }
+.task.done strong { color: var(--sub); }
+.go { color: var(--sub); }
+#pdf a { display: inline-flex; gap: 6px;
+  margin-top: 12px; color: var(--ink);
+  font-size: 15px; font-weight: 600;
+  text-underline-offset: 3px; }
+
+/* PROGRESS: 숫자와 칸 막대 */
+.big { margin: 14px 0 0; font-size: 56px;
+  font-weight: 800; line-height: 1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums; }
+.big small { color: var(--mut);
+  font-size: 22px; font-weight: 600;
+  letter-spacing: 0; }
+.seg { display: grid; gap: 4px; margin: 16px 0 0;
+  grid-template-columns: repeat(10, 1fr); }
+.seg i { height: 10px; border-radius: 2px;
+  background: var(--line);
+  transition: background-color .4s var(--ease); }
+.seg i.on { background: var(--ink); }
+.seg i.off { background: transparent;
+  border: 1px dashed var(--line); }
+#msg { min-height: 24px; margin: 12px 0 0;
+  color: var(--sub); font-size: 14px; }
+#msg.err { color: #9B2F2A; font-weight: 600; }
+
+/* IDEAS: 노트마다 한 줄 핵심 */
+.ideas { list-style: none; margin: 12px 0 0;
+  padding: 0; columns: 2; column-gap: 40px; }
+.ideas li { break-inside: avoid; }
+.ideas button { display: grid; width: 100%;
+  grid-template-columns: 28px 1fr; gap: 8px;
+  padding: 8px 0; text-align: left;
+  background: none; border: 0;
+  border-bottom: 1px dashed #E2CFCF;
+  font-size: 15px; line-height: 1.5; }
+.ideas button:hover span {
+  text-decoration: underline;
+  text-underline-offset: 3px; }
+.ideas b { color: var(--mut); font-size: 12px;
+  padding-top: 2px;
+  font-variant-numeric: tabular-nums; }
+.ideas .none { padding: 8px 0; color: var(--mut);
+  font-size: 15px; }
+
+/* NOTES: 줄 노트 카드들 */
+.notes-head { display: flex; gap: 16px;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 56px 0 0; padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule); }
+.notes-head h2 { margin: 0; color: var(--head);
+  font-size: 30px; font-weight: 800;
+  letter-spacing: -.01em; }
+#list { display: grid; gap: 16px;
+  grid-template-columns: repeat(12, 1fr);
+  margin-top: 20px; }
+.note { grid-column: span var(--span, 6);
+  display: flex; flex-direction: column;
+  min-width: 0; padding: 20px 22px 18px;
+  background: #fff; border-radius: var(--r);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  animation: rise .45s var(--ease) both;
+  transition: border-color .2s var(--ease); }
+.note:hover { border-color: #B9B5AD; }
+.note.on { border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink); }
+.note h3 { margin: 14px 0 0; font-size: 18px;
+  font-weight: 700; line-height: 1.5; }
+.state { color: var(--mut); font-size: 13px;
+  font-weight: 600; }
+.state.ok { color: var(--ink); }
+/* 점선 줄 노트: 줄 높이 30px 마다 점선 */
+.ruled { --pg: #fff;
+  margin: 6px 0 0; color: #444;
+  font-size: 15px; line-height: 30px;
+  background-image:
+    linear-gradient(90deg, var(--pg) 3px,
+      transparent 3px),
+    linear-gradient(transparent 29px,
+      var(--dash) 29px);
+  background-size: 6px 100%, 100% 30px; }
+.note .lines { margin: 16px 0 0;
+  padding: 2px 16px; border-radius: 6px;
+  background: var(--cream); }
+.note .lines li { font-size: 15px;
+  padding: 9px 0; gap: 10px;
+  grid-template-columns: 22px 1fr;
+  border-top: 1px dashed #DDD5C7; }
+.note .lines li:first-child { border-top: 0; }
+.note .lines li:last-child { border-bottom: 0; }
+.note .lines b { padding-top: 2px;
+  font-size: 12px; }
+.note .bad { margin: 14px 0 0;
+  color: #9B2F2A; font-size: 14px; }
+.note-foot { display: flex; gap: 8px;
+  justify-content: flex-end;
+  margin-top: auto; padding-top: 14px; }
+.blank { grid-column: 1 / -1; margin: 0;
+  padding: 48px 0; color: var(--mut);
+  text-align: center; font-size: 16px;
+  border: 1px dashed var(--dash);
+  border-radius: var(--r); }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes spin { to { transform: rotate(1turn); } }
 @media (prefers-reduced-motion: reduce) {
-  .card { animation: none; }
+  .tile, .note, .task.busy .dot {
+    animation: none; }
+}
+
+/* 폰: 한 줄로 쌓기 */
+@media (max-width: 860px) {
+  .sheet { margin: 0; padding: 28px 18px 48px;
+    border: 0; }
+  .bento, #list { gap: 12px; }
+  .bento &gt; *, #list &gt; * {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important; }
+  .tile { padding: 20px; }
+  .ideas { columns: 1; }
+  .lines li { font-size: 17px; }
+  .t-sum h2 { margin-top: 20px; }
+  .notes-head { margin-top: 40px; }
 }
 &lt;/style&gt;
 &lt;/head&gt;
 
 &lt;body&gt;
-&lt;main&gt;
-&lt;h1&gt;요약 노트&lt;/h1&gt;
-&lt;p class=&quot;lead&quot;&gt;필기를 칸마다 3줄로 줄입니다&lt;/p&gt;
-&lt;button class=&quot;main&quot;
-  onclick=&quot;showNotes()&quot;&gt;필기 불러오기&lt;/button&gt;
-&lt;button onclick=&quot;sumAll()&quot;&gt;전체 요약&lt;/button&gt;
-&lt;button onclick=&quot;makePdf()&quot;&gt;PDF로 저장&lt;/button&gt;
-&lt;p id=&quot;msg&quot; class=&quot;meta&quot;&gt;&lt;/p&gt;
-&lt;p id=&quot;pdf&quot;&gt;&lt;/p&gt;
-&lt;div id=&quot;list&quot;&gt;&lt;/div&gt;
+&lt;main class=&quot;sheet&quot;&gt;
+  &lt;header class=&quot;top&quot;&gt;
+    &lt;div&gt;
+      &lt;h1&gt;NOTES&lt;/h1&gt;
+      &lt;p class=&quot;lead&quot;&gt;요약 노트 · 필기를 칸마다 3줄로 줄입니다&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;p class=&quot;date&quot;&gt;DATE :&lt;span id=&quot;today&quot;&gt;&lt;/span&gt;&lt;/p&gt;
+  &lt;/header&gt;
+
+  &lt;section class=&quot;bento&quot;&gt;
+    &lt;!-- 큰 칸: 고른 노트의 요약 --&gt;
+    &lt;article class=&quot;tile t-sum&quot; id=&quot;hero&quot;&gt;&lt;/article&gt;
+
+    &lt;!-- 할 일 = 버튼 세 개 --&gt;
+    &lt;article class=&quot;tile t-todo&quot;&gt;
+      &lt;p class=&quot;label&quot;&gt;To do&lt;/p&gt;
+      &lt;ul class=&quot;todo&quot;&gt;
+        &lt;li&gt;&lt;button class=&quot;task&quot; id=&quot;tLoad&quot;
+          onclick=&quot;showNotes()&quot;&gt;
+          &lt;i class=&quot;dot&quot;&gt;&lt;/i&gt;
+          &lt;span&gt;&lt;strong&gt;필기 불러오기&lt;/strong&gt;
+          &lt;small&gt;&#x27;필기&#x27; 탭 A열에서 최대 10칸&lt;/small&gt;&lt;/span&gt;
+          &lt;span class=&quot;go&quot;&gt;→&lt;/span&gt;&lt;/button&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;button class=&quot;task&quot; id=&quot;tAll&quot;
+          onclick=&quot;sumAll()&quot;&gt;
+          &lt;i class=&quot;dot&quot;&gt;&lt;/i&gt;
+          &lt;span&gt;&lt;strong&gt;전체 요약&lt;/strong&gt;
+          &lt;small&gt;노트마다 3줄로 차례대로&lt;/small&gt;&lt;/span&gt;
+          &lt;span class=&quot;go&quot;&gt;→&lt;/span&gt;&lt;/button&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;button class=&quot;task&quot; id=&quot;tPdf&quot;
+          onclick=&quot;makePdf()&quot;&gt;
+          &lt;i class=&quot;dot&quot;&gt;&lt;/i&gt;
+          &lt;span&gt;&lt;strong&gt;PDF로 저장&lt;/strong&gt;
+          &lt;small&gt;시트를 한 장으로 드라이브에&lt;/small&gt;&lt;/span&gt;
+          &lt;span class=&quot;go&quot;&gt;→&lt;/span&gt;&lt;/button&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;p id=&quot;pdf&quot;&gt;&lt;/p&gt;
+    &lt;/article&gt;
+
+    &lt;!-- 진행: 몇 칸 요약했나 --&gt;
+    &lt;article class=&quot;tile t-stat&quot;&gt;
+      &lt;div class=&quot;row&quot;&gt;
+        &lt;p class=&quot;label&quot;&gt;Progress&lt;/p&gt;
+        &lt;p class=&quot;idx&quot;&gt;요약 완료&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;p class=&quot;big&quot; id=&quot;count&quot;&gt;0&lt;small&gt; / 0&lt;/small&gt;&lt;/p&gt;
+      &lt;div class=&quot;seg&quot; id=&quot;seg&quot;&gt;&lt;/div&gt;
+      &lt;p id=&quot;msg&quot;&gt;&lt;/p&gt;
+    &lt;/article&gt;
+
+    &lt;!-- 한 줄 핵심 모음 --&gt;
+    &lt;article class=&quot;tile t-idea&quot;&gt;
+      &lt;p class=&quot;label&quot;&gt;Ideas&lt;/p&gt;
+      &lt;p class=&quot;hint&quot;&gt;노트마다 요약 첫 줄&lt;/p&gt;
+      &lt;ol class=&quot;ideas&quot; id=&quot;ideas&quot;&gt;&lt;/ol&gt;
+    &lt;/article&gt;
+  &lt;/section&gt;
+
+  &lt;div class=&quot;notes-head&quot;&gt;
+    &lt;h2&gt;NOTES&lt;/h2&gt;
+    &lt;p class=&quot;idx&quot; id=&quot;noteCount&quot;&gt;필기 0칸&lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;list&quot;&gt;
+    &lt;p class=&quot;blank&quot;&gt;[필기 불러오기]를 누르면 노트 카드가 여기 깔립니다&lt;/p&gt;
+  &lt;/div&gt;
 &lt;/main&gt;
 
 &lt;script&gt;
+let notes = [];   // { row, text, sum, busy, err }
+let pick = 0;     // SUMMARY 칸에 크게 보일 노트 번호
+
 // 아이디로 화면 요소를 찾습니다
 function el(id) {
   return document.getElementById(id);
 }
-// 요소를 새로 만듭니다
-function mk(tag) {
-  return document.createElement(tag);
+// 요소를 만들고 글(textContent)과 이름표를 붙입니다
+function mk(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
 }
-// 안내 글을 화면에 보여 줍니다
+// 01, 02 … 두 자리 번호
+function two(i) {
+  return String(i + 1).padStart(2, &#x27;0&#x27;);
+}
+// 안내 글을 보여 줍니다
 function show(t) {
+  el(&#x27;msg&#x27;).className = &#x27;&#x27;;
   el(&#x27;msg&#x27;).textContent = t;
 }
-// 실패하면 이유를 보여 줍니다
+// 실패하면 이유를 보여 주고 도는 표시를 멈춥니다
 function fail(e) {
-  show(&#x27;오류: &#x27; + e.message);
+  el(&#x27;msg&#x27;).className = &#x27;err&#x27;;
+  el(&#x27;msg&#x27;).textContent = &#x27;오류: &#x27; + e.message;
+  document.querySelectorAll(&#x27;.task.busy&#x27;)
+    .forEach(function (b) {
+      b.classList.remove(&#x27;busy&#x27;);
+    });
+}
+// 할 일 버튼 상태: &#x27;&#x27; · &#x27;busy&#x27; · &#x27;done&#x27;
+function task(id, state) {
+  const b = el(id);
+  b.classList.remove(&#x27;busy&#x27;, &#x27;done&#x27;);
+  if (state) b.classList.add(state);
+}
+// 요약 글을 줄 목록으로 나눕니다(번호·기호 떼기)
+function lines(t) {
+  return String(t || &#x27;&#x27;).split(/\n+/)
+    .map(function (s) {
+      return s.replace(
+        /^\s*(\d+[.)]|[-•*·])\s*/, &#x27;&#x27;).trim();
+    })
+    .filter(Boolean);
+}
+// 필기를 첫 문장(제목)과 나머지로 나눕니다
+function cut(text) {
+  const m = text.match(
+    /^([\s\S]{6,70}?[.?!])\s+([\s\S]+)$/);
+  return m ? { head: m[1], body: m[2] }
+    : { head: &#x27;&#x27;, body: text };
+}
+// 번호 붙은 요약 목록(ol)을 만듭니다
+function lineList(t) {
+  const ol = mk(&#x27;ol&#x27;, &#x27;lines&#x27;);
+  lines(t).forEach(function (s, i) {
+    const li = mk(&#x27;li&#x27;);
+    li.append(mk(&#x27;b&#x27;, &#x27;&#x27;, two(i)), mk(&#x27;span&#x27;, &#x27;&#x27;, s));
+    ol.appendChild(li);
+  });
+  return ol;
 }
 
-// [필기 불러오기]: 칸마다 카드를 그립니다
+// [필기 불러오기]: 시트에서 필기를 받아 옵니다
 function showNotes() {
+  task(&#x27;tLoad&#x27;, &#x27;busy&#x27;);
   show(&#x27;불러오는 중입니다&#x27;);
   google.script.run
     .withSuccessHandler(draw)
@@ -326,78 +676,267 @@ function showNotes() {
     .loadNotes();
 }
 
-// 필기 목록을 카드로 만듭니다
-function draw(notes) {
-  el(&#x27;list&#x27;).textContent = &#x27;&#x27;;
-  notes.forEach(function (n) {
-    const card = mk(&#x27;div&#x27;);
-    card.className = &#x27;card&#x27;;
-    card.dataset.row = n.row;
-    const p = mk(&#x27;p&#x27;);
-    p.textContent = n.text;
-    const b = mk(&#x27;button&#x27;);
-    b.textContent = &#x27;요약&#x27;;
-    b.onclick = function () {
-      one(card, null);
-    };
-    const s = mk(&#x27;div&#x27;);
-    s.className = &#x27;sum&#x27;;
-    card.append(p, b, s);
-    el(&#x27;list&#x27;).appendChild(card);
+// 받아 온 필기로 화면 전체를 다시 그립니다
+function draw(list) {
+  notes = list.map(function (n) {
+    return { row: n.row, text: n.text, sum: &#x27;&#x27; };
   });
+  pick = 0;
+  drawList();
+  drawSide();
+  task(&#x27;tLoad&#x27;, &#x27;done&#x27;);
+  task(&#x27;tAll&#x27;, &#x27;&#x27;);
   show(notes.length + &#x27;칸을 불러왔습니다&#x27;);
 }
 
-// 카드 한 칸을 요약해 아래에 보여 줍니다
-function one(card, next) {
-  const box = card.querySelector(&#x27;.sum&#x27;);
-  box.textContent = &#x27;요약 중입니다&#x27;;
+// 노트 카드 너비: 12칸을 7·5, 4·4·4 … 로 나눕니다
+function spans(n) {
+  const rows = [[7, 5], [4, 4, 4], [5, 7], [6, 6]];
+  const out = [];
+  let r = 0;
+  while (out.length &lt; n) {
+    let row = rows[r++ % rows.length];
+    const left = n - out.length;
+    if (left &lt; row.length) {
+      row = left === 1 ? [12] : [6, 6];
+    }
+    out.push.apply(out, row);
+  }
+  return out;
+}
+
+// 노트 카드들을 그립니다
+function drawList() {
+  const box = el(&#x27;list&#x27;);
+  box.textContent = &#x27;&#x27;;
+  if (notes.length === 0) {
+    box.appendChild(mk(&#x27;p&#x27;, &#x27;blank&#x27;,
+      &quot;&#x27;필기&#x27; 탭 A2부터 글을 넣어 주세요&quot;));
+  }
+  const w = spans(notes.length);
+  notes.forEach(function (n, i) {
+    const c = mk(&#x27;article&#x27;, &#x27;note&#x27;);
+    c.id = &#x27;n&#x27; + i;
+    c.tabIndex = 0;
+    c.style.setProperty(&#x27;--span&#x27;, w[i]);
+    c.style.animationDelay = (i * 40) + &#x27;ms&#x27;;
+    c.onclick = function () { choose(i); };
+    c.onkeydown = function (e) {
+      if (e.key === &#x27;Enter&#x27;) choose(i);
+    };
+    box.appendChild(c);
+    drawNote(i);
+  });
+  el(&#x27;noteCount&#x27;).textContent =
+    &#x27;필기 &#x27; + notes.length + &#x27;칸&#x27;;
+}
+
+// 카드 한 장(번호·제목·줄 노트·요약·버튼)
+function drawNote(i) {
+  const n = notes[i];
+  const c = el(&#x27;n&#x27; + i);
+  const part = cut(n.text);
+  c.textContent = &#x27;&#x27;;
+  c.classList.toggle(&#x27;on&#x27;, i === pick);
+
+  const top = mk(&#x27;div&#x27;, &#x27;row&#x27;);
+  top.appendChild(mk(&#x27;p&#x27;, &#x27;label&#x27;, &#x27;Note &#x27; + two(i)));
+  const st = mk(&#x27;span&#x27;, &#x27;state&#x27;,
+    n.busy ? &#x27;요약 중&#x27; : n.sum ? &#x27;요약 완료&#x27; : &#x27;요약 전&#x27;);
+  if (n.sum) st.classList.add(&#x27;ok&#x27;);
+  top.appendChild(st);
+  c.appendChild(top);
+
+  if (part.head) c.appendChild(mk(&#x27;h3&#x27;, &#x27;&#x27;, part.head));
+  c.appendChild(mk(&#x27;p&#x27;, &#x27;ruled&#x27;, part.body));
+  if (n.sum) c.appendChild(lineList(n.sum));
+  if (n.err) c.appendChild(mk(&#x27;p&#x27;, &#x27;bad&#x27;, &#x27;오류: &#x27; + n.err));
+
+  const foot = mk(&#x27;div&#x27;, &#x27;note-foot&#x27;);
+  const b = mk(&#x27;button&#x27;, &#x27;btn&#x27;,
+    n.busy ? &#x27;요약 중…&#x27; : n.sum ? &#x27;다시 요약&#x27; : &#x27;요약&#x27;);
+  b.disabled = !!n.busy;
+  b.onclick = function (e) {
+    e.stopPropagation();
+    one(i, null);
+  };
+  foot.appendChild(b);
+  c.appendChild(foot);
+}
+
+// 노트를 골라 SUMMARY 칸에 크게 보여 줍니다
+function choose(i) {
+  const old = el(&#x27;n&#x27; + pick);
+  if (old) old.classList.remove(&#x27;on&#x27;);
+  pick = i;
+  el(&#x27;n&#x27; + i).classList.add(&#x27;on&#x27;);
+  drawHero();
+}
+
+// 오른쪽 세 칸과 큰 칸을 새로 그립니다
+function drawSide() {
+  drawHero();
+  drawCount();
+  drawIdeas();
+}
+
+// SUMMARY 큰 칸
+function drawHero() {
+  const h = el(&#x27;hero&#x27;);
+  h.textContent = &#x27;&#x27;;
+  const top = mk(&#x27;div&#x27;, &#x27;row&#x27;);
+  top.appendChild(mk(&#x27;p&#x27;, &#x27;label&#x27;, &#x27;Summary&#x27;));
+  h.appendChild(top);
+
+  if (notes.length === 0) {
+    h.appendChild(mk(&#x27;p&#x27;, &#x27;empty&#x27;,
+      &#x27;필기를 불러오면\n고른 노트의 3줄 요약이\n여기에 크게 보입니다&#x27;));
+    h.lastChild.style.whiteSpace = &#x27;pre-line&#x27;;
+    return;
+  }
+  const n = notes[pick];
+  const part = cut(n.text);
+  top.appendChild(mk(&#x27;p&#x27;, &#x27;idx&#x27;,
+    &#x27;NOTE &#x27; + two(pick) + &#x27; / &#x27;
+    + String(notes.length).padStart(2, &#x27;0&#x27;)));
+  h.appendChild(mk(&#x27;h2&#x27;, &#x27;&#x27;, part.head || n.text.slice(0, 40)));
+  if (n.sum) {
+    h.appendChild(lineList(n.sum));
+  } else {
+    h.appendChild(mk(&#x27;p&#x27;, &#x27;wait&#x27;,
+      n.busy ? &#x27;요약하는 중입니다…&#x27; : &#x27;아직 요약 전입니다&#x27;));
+  }
+
+  // 아래쪽: 원문을 줄 노트로
+  const orig = mk(&#x27;div&#x27;, &#x27;orig&#x27;);
+  orig.append(mk(&#x27;p&#x27;, &#x27;label&#x27;, &#x27;원문&#x27;),
+    mk(&#x27;p&#x27;, &#x27;ruled&#x27;, n.text));
+  h.appendChild(orig);
+
+  const foot = mk(&#x27;div&#x27;, &#x27;sum-foot&#x27;);
+  const prev = mk(&#x27;button&#x27;, &#x27;btn&#x27;, &#x27;← 이전&#x27;);
+  prev.disabled = pick === 0;
+  prev.onclick = function () { choose(pick - 1); };
+  const next = mk(&#x27;button&#x27;, &#x27;btn&#x27;, &#x27;다음 →&#x27;);
+  next.disabled = pick === notes.length - 1;
+  next.onclick = function () { choose(pick + 1); };
+  const go = mk(&#x27;button&#x27;, &#x27;btn ink&#x27;,
+    n.sum ? &#x27;다시 요약&#x27; : &#x27;이 노트 요약&#x27;);
+  go.disabled = !!n.busy;
+  go.onclick = function () { one(pick, null); };
+  foot.append(prev, next, mk(&#x27;span&#x27;, &#x27;grow&#x27;), go);
+  h.appendChild(foot);
+}
+
+// PROGRESS: 요약한 칸 수와 10칸 막대
+function drawCount() {
+  const done = notes.filter(function (n) {
+    return n.sum;
+  }).length;
+  const c = el(&#x27;count&#x27;);
+  c.textContent = done;
+  c.appendChild(mk(&#x27;small&#x27;, &#x27;&#x27;, &#x27; / &#x27; + notes.length));
+  const seg = el(&#x27;seg&#x27;);
+  seg.textContent = &#x27;&#x27;;
+  for (let i = 0; i &lt; 10; i++) {
+    const s = mk(&#x27;i&#x27;);
+    if (i &gt;= notes.length) s.className = &#x27;off&#x27;;
+    else if (notes[i].sum) s.className = &#x27;on&#x27;;
+    seg.appendChild(s);
+  }
+}
+
+// IDEAS: 요약 첫 줄만 모읍니다(누르면 그 노트로)
+function drawIdeas() {
+  const box = el(&#x27;ideas&#x27;);
+  box.textContent = &#x27;&#x27;;
+  notes.forEach(function (n, i) {
+    const first = lines(n.sum)[0];
+    if (!first) return;
+    const b = mk(&#x27;button&#x27;);
+    b.append(mk(&#x27;b&#x27;, &#x27;&#x27;, two(i)), mk(&#x27;span&#x27;, &#x27;&#x27;, first));
+    b.onclick = function () { choose(i); };
+    const li = mk(&#x27;li&#x27;);
+    li.appendChild(b);
+    box.appendChild(li);
+  });
+  if (!box.firstChild) {
+    box.appendChild(mk(&#x27;li&#x27;, &#x27;none&#x27;,
+      &#x27;요약을 하면 첫 줄이 여기 모입니다&#x27;));
+  }
+}
+
+// 노트 한 칸을 요약합니다(끝나면 next 실행)
+function one(i, next) {
+  const n = notes[i];
+  n.busy = true;
+  n.err = &#x27;&#x27;;
+  drawNote(i);
+  choose(i);
   google.script.run
     .withSuccessHandler(function (t) {
-      box.textContent = t;
+      n.busy = false;
+      n.sum = String(t);
+      drawNote(i);
+      drawSide();
       if (next) next();
     })
     .withFailureHandler(function (e) {
-      box.textContent = &#x27;오류: &#x27; + e.message;
+      n.busy = false;
+      n.err = e.message;
+      drawNote(i);
+      drawHero();
       if (next) next();
     })
-    .summarizeNote(Number(card.dataset.row),
-      card.querySelector(&#x27;p&#x27;).textContent);
+    .summarizeNote(n.row, n.text);
 }
 
 // [전체 요약]: 카드를 차례로 요약합니다
 function sumAll() {
-  const cards = Array.from(
-    document.querySelectorAll(&#x27;.card&#x27;));
+  if (notes.length === 0) {
+    show(&#x27;먼저 필기를 불러오세요&#x27;);
+    return;
+  }
+  task(&#x27;tAll&#x27;, &#x27;busy&#x27;);
   let i = 0;
   function step() {
-    if (i &gt;= cards.length) {
+    if (i &gt;= notes.length) {
+      task(&#x27;tAll&#x27;, &#x27;done&#x27;);
       show(&#x27;전체 요약을 마쳤습니다&#x27;);
       return;
     }
-    show(&#x27;요약 중 &#x27; + (i + 1) + &#x27;/&#x27;
-      + cards.length);
-    one(cards[i++], step);
+    show(&#x27;요약 중 &#x27; + (i + 1) + &#x27; / &#x27; + notes.length);
+    one(i++, step);
   }
   step();
 }
 
 // [PDF로 저장]: 파일 이름과 링크를 보여 줍니다
 function makePdf() {
+  task(&#x27;tPdf&#x27;, &#x27;busy&#x27;);
   show(&#x27;PDF 저장 중입니다&#x27;);
   google.script.run
     .withSuccessHandler(function (f) {
+      task(&#x27;tPdf&#x27;, &#x27;done&#x27;);
       show(&#x27;저장했습니다&#x27;);
-      const a = mk(&#x27;a&#x27;);
+      const a = mk(&#x27;a&#x27;, &#x27;&#x27;, f.name + &#x27; 열기 →&#x27;);
       a.href = f.url;
       a.target = &#x27;_blank&#x27;;
-      a.textContent = f.name + &#x27; 열기&#x27;;
       el(&#x27;pdf&#x27;).textContent = &#x27;&#x27;;
       el(&#x27;pdf&#x27;).appendChild(a);
     })
     .withFailureHandler(fail)
     .savePdfLink();
 }
+
+// 오늘 날짜를 머리에 적고 빈 화면을 그립니다
+(function start() {
+  const d = new Date();
+  el(&#x27;today&#x27;).textContent = d.getFullYear() + &#x27; / &#x27;
+    + String(d.getMonth() + 1).padStart(2, &#x27;0&#x27;) + &#x27; / &#x27;
+    + String(d.getDate()).padStart(2, &#x27;0&#x27;);
+  drawSide();
+})();
 &lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;

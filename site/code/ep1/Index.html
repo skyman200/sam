@@ -2,158 +2,447 @@
 <html>
 <head>
 <base target="_top">
+<meta charset="utf-8">
 <meta name="viewport"
-  content="width=device-width,
-  initial-scale=1">
+  content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&display=swap">
 <style>
-:root { --ink: #1A1A1A; --sub: #555;
-  --mut: #6B6B6B; --blue: #1F4E9A;
-  --mark: #FFE066; --paper: #F4F3EE;
-  --line: rgba(26, 26, 26, .12);
-  --ease: cubic-bezier(.22, 1, .36, 1); }
+/* 색과 글꼴: 흰 종이 + 남색 한 가지 */
+:root {
+  --font: "Pretendard", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --serif: "Noto Serif KR", "AppleMyungjo",
+    "Batang", serif;
+  --bg: #ECEBE7; --sheet: #FFFFFF;
+  --ink: #26282B; --head: #33363A;
+  --sub: #686A6D; --mut: #9B9B98;
+  --rule: #3E4146; --line: #E3E1DC;
+  --dash: #D3D0CA;
+  --navy: #21324B; --navy2: #172438;
+  --cream: #F7F3EC; --mist: #EDF2F5;
+  --r: 8px;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+}
 * { box-sizing: border-box; }
-body { margin: 0; padding: 24px 20px 48px;
-  background: var(--paper); color: var(--ink);
-  font: 18px/1.5 "Apple SD Gothic Neo",
-    "Malgun Gothic", sans-serif; }
-main { max-width: 640px; margin: 0 auto; }
-h1 { font-size: 32px; font-weight: 600;
-  line-height: 1.2; margin: 0 0 4px; }
-h2 { font-size: 20px; font-weight: 600;
-  margin: 32px 0 12px; }
-.lead { color: var(--sub); margin: 0 0 20px; }
-.meta { color: var(--mut); font-size: 16px; }
-.err { color: #B3261E; font-size: 18px;
-  font-weight: 600; }
-.card { background: #fff; padding: 20px;
-  border: 1px solid var(--line);
-  border-radius: 12px; margin: 12px 0;
-  animation: in .3s var(--ease) both; }
-label { display: block; color: var(--sub);
-  font-size: 16px; margin: 12px 0 4px; }
+body { margin: 0; background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.6 var(--font);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit;
+  cursor: pointer; }
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 3px; }
+
+/* 종이 한 장 */
+.sheet { max-width: 1120px;
+  margin: 40px auto;
+  padding: 56px 56px 72px;
+  background: var(--sheet);
+  border: 1px solid #DCDAD5; }
+
+/* 머리: SCRAPS 와 건수, 굵은 선 */
+.top { display: flex; flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px; padding-bottom: 18px;
+  border-bottom: 2px solid var(--rule); }
+.top > div { flex: 1 1 260px; min-width: 0; }
+h1 { margin: 0; color: var(--head);
+  font-size: clamp(48px, 8vw, 84px);
+  font-weight: 800; line-height: .9;
+  letter-spacing: -.025em; }
+.lead { margin: 12px 0 0; color: var(--sub);
+  font-size: 16px; }
+.total { margin: 0; text-align: right; }
+.total b { display: block; color: var(--navy);
+  font-size: 44px; font-weight: 800;
+  line-height: 1; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums; }
+
+.label { margin: 0; color: var(--head);
+  font-size: 13px; font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase; }
+.hint { margin: 2px 0 0; color: var(--mut);
+  font-size: 14px; }
+.row { display: flex; align-items: baseline;
+  justify-content: space-between; gap: 12px; }
+
+/* 벤토 격자: 왼쪽 저장·도구, 오른쪽 서재 */
+.bento { display: grid; gap: 16px;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-areas:
+    "form form form form lib lib lib lib lib lib lib lib"
+    "tool tool tool tool lib lib lib lib lib lib lib lib";
+  grid-template-rows: auto 1fr;
+  margin-top: 32px; align-items: start; }
+.tile { min-width: 0; padding: 24px 26px;
+  border-radius: var(--r);
+  animation: rise .5s var(--ease) both; }
+.t-form { grid-area: form;
+  background: var(--mist); }
+.t-tool { grid-area: tool;
+  background: var(--cream);
+  animation-delay: .08s; }
+.t-lib { grid-area: lib; padding: 4px 0 0;
+  animation-delay: .04s; }
+
+/* 새 스크랩 입력 */
+.field { display: block; margin: 16px 0 0; }
+.field span { display: block; margin: 0 0 6px;
+  color: var(--sub); font-size: 13px;
+  font-weight: 700; letter-spacing: .04em; }
 input, textarea { width: 100%; font: inherit;
-  padding: 12px 16px; border-radius: 10px;
-  border: 1.5px solid #8A8A85;
-  background: #fff; }
-input:focus, textarea:focus {
-  outline: 3px solid var(--blue);
-  border-color: var(--blue); }
-button { display: block; width: 100%;
-  font: inherit; font-weight: 600;
-  padding: 16px 20px; margin: 12px 0 0;
-  border-radius: 10px; cursor: pointer;
-  color: var(--ink); background: #fff;
-  border: 2px solid var(--ink);
-  transition: background-color .15s var(--ease),
-    transform .15s var(--ease); }
-button:hover { background: #EDECE6; }
-button:active { transform: scale(.98); }
-button:focus-visible {
-  outline: 3px solid var(--blue);
-  outline-offset: 2px; }
-button.main { background: var(--blue);
-  border-color: var(--blue); color: #fff; }
-button.main:hover { background: #17407E; }
-mark { background: var(--mark);
-  color: inherit; padding: 0 4px; }
-.top { font-size: 20px; font-weight: 600;
-  margin: 0 0 4px; }
-.card a { color: var(--blue);
-  word-break: break-all; }
-.card p { margin: 4px 0; }
-.row { display: flex; gap: 12px;
-  align-items: center; margin: 8px 0; }
-.row .lab { width: 40%; flex: none; }
-.bar { background: #C9C9C4; height: 16px;
-  border-radius: 4px; }
-.bar.top { background: var(--blue); }
-.row .num { font-variant-numeric: tabular-nums; }
-@keyframes in {
-  from { opacity: 0; transform: translateY(8px); }
+  font-size: 16px; color: var(--ink);
+  padding: 11px 14px; border-radius: 6px;
+  border: 1px solid #C9D2D9; background: #fff;
+  transition: border-color .2s var(--ease),
+    box-shadow .2s var(--ease); }
+textarea { resize: vertical;
+  font-family: var(--serif); line-height: 1.6; }
+input:focus, textarea:focus { outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(33, 50, 75, .14); }
+.save { width: 100%; margin: 20px 0 0;
+  padding: 14px 18px; border: 0;
+  border-radius: 6px; background: var(--navy);
+  color: #fff; font-weight: 700;
+  transition: background-color .2s var(--ease); }
+.save:hover { background: var(--navy2); }
+.save:disabled { background: #8A93A0;
+  cursor: default; }
+#msg { min-height: 24px; margin: 12px 0 0;
+  color: var(--sub); font-size: 14px; }
+#msg.err { color: #9B2F2A; font-weight: 600; }
+
+/* 도구: 할 일처럼 줄 세 개 */
+.tools { list-style: none; margin: 12px 0 0;
+  padding: 0; }
+.task { display: grid; width: 100%;
+  grid-template-columns: 1fr auto; gap: 12px;
+  align-items: center; padding: 13px 2px;
+  text-align: left; background: none; border: 0;
+  border-bottom: 1px dashed #DDD3C3;
+  transition: background-color .2s var(--ease); }
+.task:hover { background: rgba(255,255,255,.6); }
+.task strong { display: block; font-size: 16px;
+  font-weight: 700; }
+.task small { display: block; color: var(--sub);
+  font-size: 13px; }
+.go { color: var(--sub); font-size: 15px; }
+.task.busy .go::before { content: "처리 중 ";
+  font-size: 12px; }
+.out:empty { display: none; }
+.out { margin: 12px 0 4px; padding: 16px 18px;
+  background: #fff; border-radius: 6px;
+  border: 1px solid #E8E0D2;
+  animation: rise .35s var(--ease) both; }
+.out .big { margin: 0; font-size: 34px;
+  font-weight: 800; line-height: 1;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums; }
+.out .big small { margin-left: 6px;
+  color: var(--sub); font-size: 15px;
+  font-weight: 600; }
+.out p { margin: 0; }
+.out a { color: var(--navy); font-weight: 600;
+  font-size: 15px; text-underline-offset: 3px; }
+.out .title { font-weight: 700; }
+.out .meta { color: var(--sub); font-size: 14px; }
+
+/* 주제별 개수 막대 */
+.bars { margin: 14px 0 0; }
+.bar-row { display: grid; align-items: center;
+  grid-template-columns: 92px 1fr 22px;
+  gap: 10px; margin: 7px 0; font-size: 14px; }
+.bar-row span:first-child { overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis; }
+.track { height: 8px; border-radius: 2px;
+  background: #EEE9E0; }
+.fill { height: 100%; border-radius: 2px;
+  background: #A8A196;
+  transition: width .6s var(--ease); }
+.fill.max { background: var(--navy); }
+.num { text-align: right; color: var(--sub);
+  font-variant-numeric: tabular-nums; }
+
+/* 서재: 주제 칩 + 스크랩 카드 */
+.lib-head { display: flex; gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule); }
+.lib-head h2 { margin: 0; color: var(--head);
+  font-size: 30px; font-weight: 800; }
+.chips { display: flex; flex-wrap: wrap;
+  gap: 6px; margin: 16px 0 0; }
+.chip { padding: 6px 12px; font-size: 14px;
+  font-weight: 600; border-radius: 999px;
+  border: 1px solid #CFCCC5; background: #fff;
+  transition: border-color .2s var(--ease); }
+.chip:hover { border-color: var(--navy); }
+.chip b { margin-left: 4px; color: var(--mut);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums; }
+.chip.on { background: var(--navy);
+  border-color: var(--navy); color: #fff; }
+.chip.on b { color: #B9C3D1; }
+
+#list { display: grid; gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  margin: 16px 0 0; }
+.clip { display: flex; flex-direction: column;
+  min-width: 0; padding: 20px 22px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r); background: #fff;
+  animation: rise .4s var(--ease) both; }
+.clip.lead-clip { grid-column: 1 / -1;
+  padding: 28px 30px 22px;
+  border-color: var(--navy);
+  box-shadow: inset 4px 0 0 var(--navy); }
+.topic { color: var(--navy); font-size: 13px;
+  font-weight: 800; letter-spacing: .04em; }
+.when { color: var(--mut); font-size: 13px;
+  font-variant-numeric: tabular-nums; }
+.new { margin-right: 8px; padding: 2px 6px;
+  border-radius: 3px; background: var(--navy);
+  color: #fff; font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; }
+.q { position: relative; margin: 14px 0 18px;
+  padding-left: 26px;
+  font: 500 19px/1.6 var(--serif);
+  color: var(--ink); }
+.q::before { content: "\201C"; position: absolute;
+  left: -2px; top: -10px; color: #B8BFC9;
+  font: 700 44px/1 var(--serif); }
+.lead-clip .q { font-size: 26px;
+  line-height: 1.5; padding-left: 34px; }
+.lead-clip .q::before { font-size: 60px;
+  top: -14px; }
+.src { display: flex; align-items: center;
+  gap: 8px; margin-top: auto; padding-top: 12px;
+  border-top: 1px dashed var(--dash);
+  color: var(--sub); font-size: 13px;
+  text-decoration: none; min-width: 0; }
+.src .host { color: var(--ink); font-weight: 600;
+  white-space: nowrap; }
+.src .path { overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis; }
+.src .arr { margin-left: auto; flex: none; }
+a.src:hover .host { color: var(--navy);
+  text-decoration: underline;
+  text-underline-offset: 3px; }
+.blank { grid-column: 1 / -1; margin: 0;
+  padding: 56px 0; color: var(--mut);
+  text-align: center;
+  border: 1px dashed var(--dash);
+  border-radius: var(--r); }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .card { animation: none; }
+  .tile, .clip, .out { animation: none; }
+}
+
+/* 폰: 저장 → 서재 → 도구 순서로 쌓기 */
+@media (max-width: 860px) {
+  .sheet { margin: 0; padding: 28px 18px 48px;
+    border: 0; }
+  .bento { grid-template-columns: 1fr;
+    grid-template-areas: "form" "lib" "tool";
+    grid-template-rows: auto; gap: 24px; }
+  .tile { padding: 20px; }
+  .t-lib { padding: 0; }
+  #list { grid-template-columns: 1fr; }
+  .lead-clip .q { font-size: 22px; }
+  .total b { font-size: 36px; }
 }
 </style>
 </head>
 
 <body>
-<main>
-<h1>내 스크랩</h1>
-<p class="lead">읽은 자료를 주제·링크·인용구로 모읍니다</p>
+<main class="sheet">
+  <header class="top">
+    <div>
+      <h1>SCRAPS</h1>
+      <p class="lead">내 스크랩 · 읽은 자료를 주제·링크·인용구로 모읍니다</p>
+    </div>
+    <p class="total"><span class="label">Items</span>
+      <b id="total">00</b></p>
+  </header>
 
-<section class="card">
-  <label for="topic">주제</label>
-  <input id="topic">
-  <label for="link">링크</label>
-  <input id="link">
-  <label for="quote">인용구</label>
-  <textarea id="quote" rows="3"></textarea>
-  <button class="main" onclick="save()">
-    저장</button>
-  <p id="msg" class="meta"></p>
-</section>
+  <section class="bento">
+    <!-- 새 스크랩 저장 -->
+    <article class="tile t-form">
+      <p class="label">New scrap</p>
+      <label class="field"><span>주제</span>
+        <input id="topic" placeholder="예: 복습 간격"></label>
+      <label class="field"><span>링크</span>
+        <input id="link" placeholder="https://"></label>
+      <label class="field"><span>인용구</span>
+        <textarea id="quote" rows="3"
+          placeholder="마음에 남은 한 문장"></textarea></label>
+      <button class="save" id="saveBtn"
+        onclick="save()">저장하기</button>
+      <p id="msg"></p>
+    </article>
 
-<h2>내 스크랩 목록</h2>
-<div id="list"></div>
+    <!-- 내 서재 -->
+    <article class="tile t-lib">
+      <div class="lib-head">
+        <h2>LIBRARY</h2>
+        <p class="hint" id="shown">최신순</p>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div id="list"></div>
+    </article>
 
-<h2>정리하고 내보내기</h2>
-<button onclick="doClean()">정리하기</button>
-<div id="clean"></div>
-<button onclick="doExport()">
-  문서로 내보내기</button>
-<div id="doc"></div>
-<button onclick="mail()">내 메일로 받기</button>
-<div id="mailed"></div>
+    <!-- 정리하고 내보내기 -->
+    <article class="tile t-tool">
+      <p class="label">Tools</p>
+      <p class="hint">정리하고 내보내기</p>
+      <ul class="tools">
+        <li><button class="task" id="tClean"
+          onclick="doClean()">
+          <span><strong>정리하기</strong>
+          <small>같은 링크는 지우고 주제별로 세기</small></span>
+          <span class="go">→</span></button>
+          <div class="out" id="clean"></div></li>
+        <li><button class="task" id="tDoc"
+          onclick="doExport()">
+          <span><strong>문서로 내보내기</strong>
+          <small>주제 순서로 구글 문서 한 개에</small></span>
+          <span class="go">→</span></button>
+          <div class="out" id="doc"></div></li>
+        <li><button class="task" id="tMail"
+          onclick="mail()">
+          <span><strong>내 메일로 받기</strong>
+          <small>목록을 내 주소로만 보냅니다</small></span>
+          <span class="go">→</span></button>
+          <div class="out" id="mailed"></div></li>
+      </ul>
+    </article>
+  </section>
 </main>
 
 <script>
+let all = [];       // 시트에서 받은 스크랩(최신순)
+let only = '';      // 고른 주제('' 이면 전체)
+
 // 아이디로 화면 요소를 찾습니다
 function el(id) {
   return document.getElementById(id);
 }
-// 안내 글을 화면에 보여 줍니다
-function show(t) {
-  el('msg').className = 'meta';
-  el('msg').textContent = t;
-}
-// 실패하면 이유를 보여 줍니다
-function fail(e) {
-  show('실패: ' + e.message);
-  el('msg').className = 'err';
-}
 // 글(textContent)만 넣은 요소를 만듭니다
 function make(tag, text, cls) {
   const n = document.createElement(tag);
-  n.textContent = text;
+  if (text !== undefined && text !== '') {
+    n.textContent = text;
+  }
   if (cls) n.className = cls;
   return n;
 }
-// http(s) 주소만 링크로, 나머지는 글로 보여 줍니다
+// 안내 글을 보여 줍니다
+function show(t) {
+  el('msg').className = '';
+  el('msg').textContent = t;
+}
+// 실패하면 이유를 보여 주고 버튼을 되살립니다
+function fail(e) {
+  el('msg').className = 'err';
+  el('msg').textContent = '실패: ' + e.message;
+  el('saveBtn').disabled = false;
+  document.querySelectorAll('.task.busy')
+    .forEach(function (b) {
+      b.classList.remove('busy');
+    });
+}
+// 도구 버튼에 '처리 중' 표시를 켜고 끕니다
+function busy(id, on) {
+  el(id).classList.toggle('busy', on);
+}
+// http(s) 주소는 '사이트 + 경로' 링크로 보여 줍니다
 function linkNode(url) {
-  if (!/^https?:\/\//.test(url)) {
-    return make('p', url);
+  const m = String(url).match(
+    /^https?:\/\/([^/]+)(.*)$/);
+  if (!m) {
+    const p = make('p', url, 'src');
+    return p;
   }
-  const a = make('a', url);
+  const a = make('a', '', 'src');
   a.href = url;
   a.target = '_blank';
+  a.append(make('span', m[1], 'host'),
+    make('span', m[2], 'path'),
+    make('span', '↗', 'arr'));
   return a;
 }
+// '2026-11-09 14:20' → '2026.11.09'
+function day(d) {
+  return String(d).slice(0, 10)
+    .replace(/-/g, '.');
+}
 
-// 스크랩 카드들을 목록 칸에 그립니다
+// 주제 칩(전체·주제별 개수)을 그립니다
+function drawChips() {
+  const box = el('chips');
+  box.textContent = '';
+  const count = {};
+  all.forEach(function (s) {
+    count[s.topic] = (count[s.topic] || 0) + 1;
+  });
+  const names = [''].concat(Object.keys(count));
+  names.forEach(function (t) {
+    const b = make('button', t || '전체', 'chip');
+    b.appendChild(make('b',
+      String(t ? count[t] : all.length)));
+    if (t === only) b.classList.add('on');
+    b.onclick = function () {
+      only = t;
+      drawList(all);
+    };
+    box.appendChild(b);
+  });
+}
+
+// 스크랩 카드들을 서재에 그립니다
 function drawList(items) {
+  all = items;
+  if (only && !all.some(function (s) {
+    return s.topic === only; })) only = '';
+  el('total').textContent =
+    String(all.length).padStart(2, '0');
+  drawChips();
+
   const box = el('list');
   box.textContent = '';
-  if (items.length === 0) {
-    box.appendChild(
-      make('p', '스크랩이 없습니다', 'meta'));
+  const list = all.filter(function (s) {
+    return !only || s.topic === only;
+  });
+  el('shown').textContent = (only || '전체')
+    + ' · ' + list.length + '건 · 최신순';
+  if (list.length === 0) {
+    box.appendChild(make('p',
+      '아직 스크랩이 없습니다. 첫 자료를 저장해 보세요',
+      'blank'));
   }
-  items.forEach(function (s) {
-    const c = make('div', '', 'card');
-    c.appendChild(make('p', s.topic, 'top'));
-    c.appendChild(make('p', s.quote));
-    c.appendChild(linkNode(s.link));
-    c.appendChild(make('p', s.date, 'meta'));
+  list.forEach(function (s, i) {
+    const c = make('article', '', 'clip');
+    if (i === 0) c.classList.add('lead-clip');
+    c.style.animationDelay = (i * 40) + 'ms';
+    const top = make('div', '', 'row');
+    const left = make('span', '');
+    if (i === 0 && !only) {
+      left.appendChild(make('span', 'NEW', 'new'));
+    }
+    left.appendChild(make('span', s.topic, 'topic'));
+    top.append(left, make('span', day(s.date), 'when'));
+    c.append(top, make('p', s.quote || '(인용구 없음)', 'q'),
+      linkNode(s.link));
     box.appendChild(c);
   });
 }
@@ -165,50 +454,57 @@ function reload() {
     .listScraps();
 }
 
-// [저장]을 누르면 한 줄 추가하고 목록을 새로 고칩니다
+// [저장하기]: 한 줄 추가하고 목록을 새로 고칩니다
 function save() {
+  el('saveBtn').disabled = true;
   show('저장 중입니다');
   google.script.run
     .withSuccessHandler(function (t) {
       show(t);
+      el('saveBtn').disabled = false;
       el('topic').value = '';
       el('link').value = '';
       el('quote').value = '';
+      only = '';
       reload();
     })
     .withFailureHandler(fail)
-    .addScrap(el('topic').value,
-      el('link').value, el('quote').value);
+    .addScrap(el('topic').value.trim(),
+      el('link').value.trim(),
+      el('quote').value.trim());
 }
 
 // 정리 결과(삭제 건수와 주제별 막대)를 그립니다
 function drawClean(r) {
+  busy('tClean', false);
   const box = el('clean');
   box.textContent = '';
-  const c = make('div', '', 'card');
-  const p = make('p', '');
-  p.appendChild(
-    make('mark', '중복 ' + r.removed + '건 삭제'));
-  c.appendChild(p);
+  const big = make('p', String(r.removed), 'big');
+  big.appendChild(make('small', '건 중복 삭제'));
+  box.appendChild(big);
+
   const max = Math.max(1, ...r.counts.map(
     function (x) { return x.n; }));
+  const bars = make('div', '', 'bars');
   r.counts.forEach(function (x) {
-    const row = make('div', '', 'row');
-    const bar = make('div', '', 'bar');
+    const row = make('div', '', 'bar-row');
+    const track = make('div', '', 'track');
+    const fill = make('div', '', 'fill');
     if (x.n === max && max > 1) {
-      bar.className = 'bar top';
+      fill.classList.add('max');
     }
-    bar.style.width = (x.n / max * 45) + '%';
-    row.appendChild(make('span', x.topic, 'lab'));
-    row.appendChild(bar);
-    row.appendChild(make('span', x.n, 'num'));
-    c.appendChild(row);
+    fill.style.width = (x.n / max * 100) + '%';
+    track.appendChild(fill);
+    row.append(make('span', x.topic), track,
+      make('span', String(x.n), 'num'));
+    bars.appendChild(row);
   });
-  box.appendChild(c);
+  box.appendChild(bars);
   reload();
 }
-// [정리하기]를 누르면 중복을 지우고 결과를 보여 줍니다
+// [정리하기]: 중복을 지우고 결과를 보여 줍니다
 function doClean() {
+  busy('tClean', true);
   google.script.run
     .withSuccessHandler(drawClean)
     .withFailureHandler(fail)
@@ -217,40 +513,35 @@ function doClean() {
 
 // 만든 문서의 이름과 링크를 보여 줍니다
 function drawDoc(r) {
+  busy('tDoc', false);
   const box = el('doc');
   box.textContent = '';
-  const c = make('div', '', 'card');
-  const p = make('p', '', 'top');
-  p.appendChild(make('mark', r.title));
-  c.appendChild(p);
-  c.appendChild(make('p', r.n + '건', 'meta'));
-  c.appendChild(linkNode(r.url));
-  box.appendChild(c);
+  box.append(make('p', r.title, 'title'),
+    make('p', r.n + '건을 주제 순서로 담았습니다', 'meta'));
+  const a = make('a', '문서 열기 →');
+  a.href = r.url;
+  a.target = '_blank';
+  box.appendChild(a);
 }
-// [문서로 내보내기]를 누르면 문서를 만듭니다
+// [문서로 내보내기]: 문서를 만듭니다
 function doExport() {
-  show('문서 만드는 중입니다');
+  busy('tDoc', true);
   google.script.run
-    .withSuccessHandler(function (r) {
-      show('');
-      drawDoc(r);
-    })
+    .withSuccessHandler(drawDoc)
     .withFailureHandler(fail)
     .exportDoc();
 }
 
 // 메일 결과를 버튼 바로 아래에 보여 줍니다
 function drawMail(t) {
+  busy('tMail', false);
   const box = el('mailed');
   box.textContent = '';
-  const c = make('div', '', 'card');
-  const p = make('p', '');
-  p.appendChild(make('mark', t));
-  c.appendChild(p);
-  box.appendChild(c);
+  box.appendChild(make('p', t, 'meta'));
 }
-// [내 메일로 받기]를 누르면 메일을 보냅니다
+// [내 메일로 받기]: 메일을 보냅니다
 function mail() {
+  busy('tMail', true);
   google.script.run
     .withSuccessHandler(drawMail)
     .withFailureHandler(fail)
