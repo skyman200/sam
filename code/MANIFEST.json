@@ -17,7 +17,7 @@
     "requires": [
       "code/ep1/Code.gs"
     ],
-    "lines": 567
+    "lines": 593
   },
   {
     "lecture": "7-1",
@@ -131,7 +131,7 @@
     "requires": [
       "code/ep2/WebSummary.gs"
     ],
-    "lines": 720
+    "lines": 742
   },
   {
     "lecture": "7-2",

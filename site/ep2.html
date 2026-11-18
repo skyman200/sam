@@ -634,6 +634,12 @@ function fail(e) {
       b.classList.remove(&#x27;busy&#x27;);
     });
 }
+// 서버 함수가 없으면(.gs 파일을 안 붙였거나 저장·새 버전 배포를 빠뜨림)
+// 기다리지 않고 바로 알려 줍니다
+function noServer(name) {
+  fail(new Error(name + &#x27; 함수가 없습니다. &#x27;
+    + &#x27;.gs 파일을 붙이고 저장한 뒤 새 버전으로 배포하세요&#x27;));
+}
 // 할 일 버튼 상태: &#x27;&#x27; · &#x27;busy&#x27; · &#x27;done&#x27;
 function task(id, state) {
   const b = el(id);
@@ -678,10 +684,14 @@ function lineList(t) {
 function showNotes() {
   task(&#x27;tLoad&#x27;, &#x27;busy&#x27;);
   show(&#x27;불러오는 중입니다&#x27;);
-  google.script.run
-    .withSuccessHandler(draw)
-    .withFailureHandler(fail)
-    .loadNotes();
+  try {
+    google.script.run
+      .withSuccessHandler(draw)
+      .withFailureHandler(fail)
+      .loadNotes();
+  } catch (e) {
+    noServer(&#x27;loadNotes&#x27;);
+  }
 }
 
 // 받아 온 필기로 화면 전체를 다시 그립니다
@@ -881,22 +891,30 @@ function one(i, next) {
   n.err = &#x27;&#x27;;
   drawNote(i);
   choose(i);
-  google.script.run
-    .withSuccessHandler(function (t) {
-      n.busy = false;
-      n.sum = String(t);
-      drawNote(i);
-      drawSide();
-      if (next) next();
-    })
-    .withFailureHandler(function (e) {
-      n.busy = false;
-      n.err = e.message;
-      drawNote(i);
-      drawHero();
-      if (next) next();
-    })
-    .summarizeNote(n.row, n.text);
+  try {
+    google.script.run
+      .withSuccessHandler(function (t) {
+        n.busy = false;
+        n.sum = String(t);
+        drawNote(i);
+        drawSide();
+        if (next) next();
+      })
+      .withFailureHandler(function (e) {
+        n.busy = false;
+        n.err = e.message;
+        drawNote(i);
+        drawHero();
+        if (next) next();
+      })
+      .summarizeNote(n.row, n.text);
+  } catch (e) {
+    n.busy = false;
+    n.err = &#x27;summarizeNote 함수가 없습니다&#x27;;
+    drawNote(i);
+    drawHero();
+    noServer(&#x27;summarizeNote&#x27;);   // 전체 요약도 여기서 멈춥니다
+  }
 }
 
 // [전체 요약]: 카드를 차례로 요약합니다
@@ -923,18 +941,22 @@ function sumAll() {
 function makePdf() {
   task(&#x27;tPdf&#x27;, &#x27;busy&#x27;);
   show(&#x27;PDF 저장 중입니다&#x27;);
-  google.script.run
-    .withSuccessHandler(function (f) {
-      task(&#x27;tPdf&#x27;, &#x27;done&#x27;);
-      show(&#x27;저장했습니다&#x27;);
-      const a = mk(&#x27;a&#x27;, &#x27;&#x27;, f.name + &#x27; 열기 →&#x27;);
-      a.href = f.url;
-      a.target = &#x27;_blank&#x27;;
-      el(&#x27;pdf&#x27;).textContent = &#x27;&#x27;;
-      el(&#x27;pdf&#x27;).appendChild(a);
-    })
-    .withFailureHandler(fail)
-    .savePdfLink();
+  try {
+    google.script.run
+      .withSuccessHandler(function (f) {
+        task(&#x27;tPdf&#x27;, &#x27;done&#x27;);
+        show(&#x27;저장했습니다&#x27;);
+        const a = mk(&#x27;a&#x27;, &#x27;&#x27;, f.name + &#x27; 열기 →&#x27;);
+        a.href = f.url;
+        a.target = &#x27;_blank&#x27;;
+        el(&#x27;pdf&#x27;).textContent = &#x27;&#x27;;
+        el(&#x27;pdf&#x27;).appendChild(a);
+      })
+      .withFailureHandler(fail)
+      .savePdfLink();
+  } catch (e) {
+    noServer(&#x27;savePdfLink&#x27;);
+  }
 }
 
 // 오늘 날짜를 머리에 적고 빈 화면을 그립니다

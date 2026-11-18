@@ -507,6 +507,12 @@ function fail(e) {
       b.classList.remove(&#x27;busy&#x27;);
     });
 }
+// 서버 함수가 없으면(.gs 파일을 안 붙였거나 저장·새 버전 배포를 빠뜨림)
+// 기다리지 않고 바로 알려 줍니다
+function noServer(name) {
+  fail(new Error(name + &#x27; 함수가 없습니다. &#x27;
+    + &#x27;.gs 파일을 붙이고 저장한 뒤 새 버전으로 배포하세요&#x27;));
+}
 // 도구 버튼에 &#x27;처리 중&#x27; 표시를 켜고 끕니다
 function busy(id, on) {
   el(id).classList.toggle(&#x27;busy&#x27;, on);
@@ -594,30 +600,38 @@ function drawList(items) {
 }
 // 시트에서 최신 목록을 다시 받아 옵니다
 function reload() {
-  google.script.run
-    .withSuccessHandler(drawList)
-    .withFailureHandler(fail)
-    .listScraps();
+  try {
+    google.script.run
+      .withSuccessHandler(drawList)
+      .withFailureHandler(fail)
+      .listScraps();
+  } catch (e) {
+    noServer(&#x27;listScraps&#x27;);
+  }
 }
 
 // [저장하기]: 한 줄 추가하고 목록을 새로 고칩니다
 function save() {
   el(&#x27;saveBtn&#x27;).disabled = true;
   show(&#x27;저장 중입니다&#x27;);
-  google.script.run
-    .withSuccessHandler(function (t) {
-      show(t);
-      el(&#x27;saveBtn&#x27;).disabled = false;
-      el(&#x27;topic&#x27;).value = &#x27;&#x27;;
-      el(&#x27;link&#x27;).value = &#x27;&#x27;;
-      el(&#x27;quote&#x27;).value = &#x27;&#x27;;
-      only = &#x27;&#x27;;
-      reload();
-    })
-    .withFailureHandler(fail)
-    .addScrap(el(&#x27;topic&#x27;).value.trim(),
-      el(&#x27;link&#x27;).value.trim(),
-      el(&#x27;quote&#x27;).value.trim());
+  try {
+    google.script.run
+      .withSuccessHandler(function (t) {
+        show(t);
+        el(&#x27;saveBtn&#x27;).disabled = false;
+        el(&#x27;topic&#x27;).value = &#x27;&#x27;;
+        el(&#x27;link&#x27;).value = &#x27;&#x27;;
+        el(&#x27;quote&#x27;).value = &#x27;&#x27;;
+        only = &#x27;&#x27;;
+        reload();
+      })
+      .withFailureHandler(fail)
+      .addScrap(el(&#x27;topic&#x27;).value.trim(),
+        el(&#x27;link&#x27;).value.trim(),
+        el(&#x27;quote&#x27;).value.trim());
+  } catch (e) {
+    noServer(&#x27;addScrap&#x27;);
+  }
 }
 
 // 정리 결과(삭제 건수와 주제별 막대)를 그립니다
@@ -651,10 +665,14 @@ function drawClean(r) {
 // [정리하기]: 중복을 지우고 결과를 보여 줍니다
 function doClean() {
   busy(&#x27;tClean&#x27;, true);
-  google.script.run
-    .withSuccessHandler(drawClean)
-    .withFailureHandler(fail)
-    .cleanUp();
+  try {
+    google.script.run
+      .withSuccessHandler(drawClean)
+      .withFailureHandler(fail)
+      .cleanUp();
+  } catch (e) {
+    noServer(&#x27;cleanUp&#x27;);
+  }
 }
 
 // 만든 문서의 이름과 링크를 보여 줍니다
@@ -672,10 +690,14 @@ function drawDoc(r) {
 // [문서로 내보내기]: 문서를 만듭니다
 function doExport() {
   busy(&#x27;tDoc&#x27;, true);
-  google.script.run
-    .withSuccessHandler(drawDoc)
-    .withFailureHandler(fail)
-    .exportDoc();
+  try {
+    google.script.run
+      .withSuccessHandler(drawDoc)
+      .withFailureHandler(fail)
+      .exportDoc();
+  } catch (e) {
+    noServer(&#x27;exportDoc&#x27;);
+  }
 }
 
 // 메일 결과를 버튼 바로 아래에 보여 줍니다
@@ -688,10 +710,14 @@ function drawMail(t) {
 // [내 메일로 받기]: 메일을 보냅니다
 function mail() {
   busy(&#x27;tMail&#x27;, true);
-  google.script.run
-    .withSuccessHandler(drawMail)
-    .withFailureHandler(fail)
-    .mailList();
+  try {
+    google.script.run
+      .withSuccessHandler(drawMail)
+      .withFailureHandler(fail)
+      .mailList();
+  } catch (e) {
+    noServer(&#x27;mailList&#x27;);
+  }
 }
 
 reload();

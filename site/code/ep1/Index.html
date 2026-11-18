@@ -374,6 +374,12 @@ function fail(e) {
       b.classList.remove('busy');
     });
 }
+// 서버 함수가 없으면(.gs 파일을 안 붙였거나 저장·새 버전 배포를 빠뜨림)
+// 기다리지 않고 바로 알려 줍니다
+function noServer(name) {
+  fail(new Error(name + ' 함수가 없습니다. '
+    + '.gs 파일을 붙이고 저장한 뒤 새 버전으로 배포하세요'));
+}
 // 도구 버튼에 '처리 중' 표시를 켜고 끕니다
 function busy(id, on) {
   el(id).classList.toggle('busy', on);
@@ -461,30 +467,38 @@ function drawList(items) {
 }
 // 시트에서 최신 목록을 다시 받아 옵니다
 function reload() {
-  google.script.run
-    .withSuccessHandler(drawList)
-    .withFailureHandler(fail)
-    .listScraps();
+  try {
+    google.script.run
+      .withSuccessHandler(drawList)
+      .withFailureHandler(fail)
+      .listScraps();
+  } catch (e) {
+    noServer('listScraps');
+  }
 }
 
 // [저장하기]: 한 줄 추가하고 목록을 새로 고칩니다
 function save() {
   el('saveBtn').disabled = true;
   show('저장 중입니다');
-  google.script.run
-    .withSuccessHandler(function (t) {
-      show(t);
-      el('saveBtn').disabled = false;
-      el('topic').value = '';
-      el('link').value = '';
-      el('quote').value = '';
-      only = '';
-      reload();
-    })
-    .withFailureHandler(fail)
-    .addScrap(el('topic').value.trim(),
-      el('link').value.trim(),
-      el('quote').value.trim());
+  try {
+    google.script.run
+      .withSuccessHandler(function (t) {
+        show(t);
+        el('saveBtn').disabled = false;
+        el('topic').value = '';
+        el('link').value = '';
+        el('quote').value = '';
+        only = '';
+        reload();
+      })
+      .withFailureHandler(fail)
+      .addScrap(el('topic').value.trim(),
+        el('link').value.trim(),
+        el('quote').value.trim());
+  } catch (e) {
+    noServer('addScrap');
+  }
 }
 
 // 정리 결과(삭제 건수와 주제별 막대)를 그립니다
@@ -518,10 +532,14 @@ function drawClean(r) {
 // [정리하기]: 중복을 지우고 결과를 보여 줍니다
 function doClean() {
   busy('tClean', true);
-  google.script.run
-    .withSuccessHandler(drawClean)
-    .withFailureHandler(fail)
-    .cleanUp();
+  try {
+    google.script.run
+      .withSuccessHandler(drawClean)
+      .withFailureHandler(fail)
+      .cleanUp();
+  } catch (e) {
+    noServer('cleanUp');
+  }
 }
 
 // 만든 문서의 이름과 링크를 보여 줍니다
@@ -539,10 +557,14 @@ function drawDoc(r) {
 // [문서로 내보내기]: 문서를 만듭니다
 function doExport() {
   busy('tDoc', true);
-  google.script.run
-    .withSuccessHandler(drawDoc)
-    .withFailureHandler(fail)
-    .exportDoc();
+  try {
+    google.script.run
+      .withSuccessHandler(drawDoc)
+      .withFailureHandler(fail)
+      .exportDoc();
+  } catch (e) {
+    noServer('exportDoc');
+  }
 }
 
 // 메일 결과를 버튼 바로 아래에 보여 줍니다
@@ -555,10 +577,14 @@ function drawMail(t) {
 // [내 메일로 받기]: 메일을 보냅니다
 function mail() {
   busy('tMail', true);
-  google.script.run
-    .withSuccessHandler(drawMail)
-    .withFailureHandler(fail)
-    .mailList();
+  try {
+    google.script.run
+      .withSuccessHandler(drawMail)
+      .withFailureHandler(fail)
+      .mailList();
+  } catch (e) {
+    noServer('mailList');
+  }
 }
 
 reload();
