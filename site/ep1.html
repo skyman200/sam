@@ -313,6 +313,7 @@ input:focus, textarea:focus { outline: none;
 .chips { display: flex; flex-wrap: wrap;
   gap: 6px; margin: 16px 0 0; }
 .chip { padding: 6px 12px; font-size: 14px;
+  flex: none; white-space: nowrap;
   font-weight: 600; border-radius: 999px;
   border: 1px solid #CFCCC5; background: #fff;
   transition: border-color .2s var(--ease); }
@@ -391,7 +392,19 @@ a.src:hover .host { color: var(--navy);
   .tile { padding: 20px; }
   .t-lib { padding: 0; }
   #list { grid-template-columns: 1fr; }
-  .lead-clip .q { font-size: 22px; }
+  /* 칩은 한 줄로, 옆으로 밀어 보기 */
+  .chips { flex-wrap: nowrap; overflow-x: auto;
+    margin-right: -18px; padding-right: 18px;
+    scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .clip.lead-clip { padding: 22px 22px 18px; }
+  .lead-clip .q { font-size: 21px;
+    padding-left: 28px; }
+  .lead-clip .q::before { font-size: 50px; }
+  /* 링크: 사이트 이름 줄, 경로는 아랫줄 */
+  .src { flex-wrap: wrap; row-gap: 2px; }
+  .src .path { order: 3; flex-basis: 100%;
+    white-space: normal; overflow-wrap: anywhere; }
   .total b { font-size: 36px; }
 }
 &lt;/style&gt;

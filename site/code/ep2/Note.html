@@ -128,7 +128,7 @@ h1 { margin: 0; color: var(--head);
 .sum-foot .grow { flex: 1; }
 
 /* 작은 버튼: 테두리만 */
-.btn { padding: 8px 14px;
+.btn { padding: 8px 14px; white-space: nowrap;
   border: 1px solid #BDB9B1;
   border-radius: 6px; background: #fff;
   font-size: 14px; font-weight: 600;
@@ -296,7 +296,8 @@ h1 { margin: 0; color: var(--head);
   .tile { padding: 20px; }
   .ideas { columns: 1; }
   .lines li { font-size: 17px; }
-  .t-sum h2 { margin-top: 20px; }
+  .t-sum h2 { margin-top: 20px; font-size: 22px; }
+  .sum-foot .btn { padding: 8px 11px; }
   .notes-head { margin-top: 40px; }
 }
 </style>
@@ -424,6 +425,13 @@ function cut(text) {
     /^([\s\S]{6,70}?[.?!])\s+([\s\S]+)$/);
   return m ? { head: m[1], body: m[2] }
     : { head: '', body: text };
+}
+// 첫 문장이 길면 낱말 끝에서 잘라 제목으로 씁니다
+function short(t) {
+  if (t.length <= 30) return t;
+  const cut = t.slice(0, 30);
+  const sp = cut.lastIndexOf(' ');
+  return (sp > 12 ? cut.slice(0, sp) : cut) + '…';
 }
 // 번호 붙은 요약 목록(ol)을 만듭니다
 function lineList(t) {
@@ -569,7 +577,7 @@ function drawHero() {
   top.appendChild(mk('p', 'idx',
     'NOTE ' + two(pick) + ' / '
     + String(notes.length).padStart(2, '0')));
-  h.appendChild(mk('h2', '', part.head || n.text.slice(0, 40)));
+  h.appendChild(mk('h2', '', part.head || short(n.text)));
   if (n.sum) {
     h.appendChild(lineList(n.sum));
   } else {
