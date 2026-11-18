@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>실습 코드 사이트</title><style>
+:root{--red:#D6232B;--dred:#8E1B20;--ink:#1A1A1A;--gray:#555;--line:#1A1A1A;--bg:#fff;--soft:#F3F3F3;--dot:#D4D4D4}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7;
+background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:24px 24px}
+header.top{background:var(--ink);color:#fff;padding:10px 20px;font-size:14px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header.top a{color:#fff;text-decoration:none;border-bottom:1px solid var(--red)}
+header.top b{background:var(--red);padding:2px 8px}
+main{max-width:920px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:40px;line-height:1.25;margin:8px 0 6px;border-left:12px solid var(--red);padding-left:14px}
+h2{font-size:26px;margin:44px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.lead{color:var(--gray);font-size:18px;background:#fff;padding:4px 0}
+.card{background:#fff;border:1px solid var(--ink);padding:16px 18px;margin:14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card h3{margin:0 0 4px;font-size:20px}
+.tag{display:inline-block;background:var(--red);color:#fff;font-size:13px;padding:1px 8px;margin-right:6px}
+.tag.k{background:var(--ink)}
+.file{background:#fff;border:1px solid var(--ink);margin:22px 0}
+.file>.bar{display:flex;gap:8px;align-items:center;background:var(--soft);border-bottom:1px solid var(--ink);padding:8px 12px;flex-wrap:wrap}
+.bar .n{font-weight:700;font-size:18px}.bar .p{color:var(--gray);font-size:14px;flex:1;min-width:200px}
+button.copy,a.dl{font:inherit;font-size:14px;background:var(--red);color:#fff;border:0;padding:6px 14px;cursor:pointer;text-decoration:none}
+button.copy.done{background:var(--ink)}
+pre{margin:0;padding:14px 16px;background:#1A1A1A;color:#F2F2F2;overflow:auto;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;max-height:560px}
+.note{border-left:6px solid var(--red);background:#fff;padding:8px 14px;margin:14px 0;font-size:16px}
+ol.steps li{margin:6px 0}
+footer{color:var(--gray);font-size:13px;margin-top:50px}
+code.i{background:var(--soft);padding:1px 5px}
+</style></head><body>
+<header class="top"><b>SAM</b><a href="index.html">처음</a>
+<a href="ep1.html">7-1</a><a href="ep2.html">7-2</a><a href="ep3.html">9-1</a><a href="ep4.html">9-2</a></header>
+<main><h1>생활 속의 AI 융합지식<br>실습 코드 사이트</h1>
+<p class="lead">7주차 · 9주차 4강에서 만드는 Google Apps Script 예제를 그대로 복사해서 쓸 수 있습니다.</p>
+<h2>강의별 코드</h2><div class="grid"><div class="card"><h3><span class="tag">7주차 1강</span></h3><b>스크랩 웹앱과 메일 리포트</b><br>내 자료를 한 곳에 모으고, 한 주 모은 것을 메일로 받는 웹앱을 만듭니다.<br><a href="ep1.html">코드 보기 (코드 6개 · 연습 파일 2개)</a></div><div class="card"><h3><span class="tag">7주차 2강</span></h3><b>필기는 표로, 요약은 셀에서</b><br>셀에 =SAM_SUMMARY(A2)를 쓰면 요약이 나오고, PDF를 매주 저절로 저장해 폴더에 모읍니다.<br><a href="ep2.html">코드 보기 (코드 8개 · 연습 파일 1개)</a></div><div class="card"><h3><span class="tag">9주차 1강</span></h3><b>소크라테스 튜터와 폰 CBT 퀴즈</b><br>내 유인물(PDF·사진)을 올리면 AI가 문제를 만들어 주는 폰 퀴즈 웹앱을 만들고, 시험 일정을 내 캘린더에 넣습니다.<br><a href="ep3.html">코드 보기 (코드 8개 · 연습 파일 4개)</a></div><div class="card"><h3><span class="tag">9주차 2강</span></h3><b>발표 과제를 말로 시켜 만든다</b><br>발표 대본에서 디자인된 슬라이드(표지·차례·본문·Q&amp;A)를 자동으로 만들고, 키를 안전하게 보관하는 법을 익힙니다.<br><a href="ep4.html">코드 보기 (코드 7개 · 연습 파일 2개)</a></div></div>
+<h2>연습용 자료</h2>
+<div class="grid">
+<div class="card"><b>RSS 피드 연습</b><br><a href="practice/feed.xml">practice/feed.xml</a><br>7-1 importFeed 연습용</div>
+<div class="card"><b>연습 글 8편</b><br><a href="practice/a1.html">a1</a> <a href="practice/a2.html">a2</a> <a href="practice/a3.html">a3</a> <a href="practice/a4.html">a4</a> <a href="practice/a5.html">a5</a> <a href="practice/a6.html">a6</a> <a href="practice/a7.html">a7</a> <a href="practice/a8.html">a8</a> <br>스크랩 연습용 가상 글</div>
+<div class="card"><b>CSV 샘플</b><br><a href="practice/scrap_sample.csv">scrap_sample.csv</a> · <a href="practice/sample_notes.csv">sample_notes.csv</a></div>
+</div>
+<h2>요약 API (7-2 SAM_SUMMARY)</h2>
+<div class="card">Cloudflare Workers에서 도는 연습용 요약 API입니다. 주소: <code class="i">POST /api/summarize</code>.
+수업 안내에서 알려주는 코드를 헤더에 넣어야 쓸 수 있고, 연습 기간이 끝나면 닫힐 수 있습니다.</div>
+<footer>EBS 전문대연합 「생활 속의 AI 융합지식」 7주차·9주차 실습 코드. 모든 예시는 가명·더미 데이터입니다. API 키와 개인정보는 코드에 쓰지 않습니다.</footer>
+</main><script>
+document.querySelectorAll('button.copy').forEach(function(b){b.addEventListener('click',function(){
+var t=document.getElementById(b.dataset.t).textContent;
+function ok(){b.textContent='복사됨';b.classList.add('done');setTimeout(function(){b.textContent='복사';b.classList.remove('done')},1500)}
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok)}else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();ok()}
+})});
+</script></body></html>

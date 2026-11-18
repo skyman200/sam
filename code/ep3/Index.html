@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+/* 색은 여기서만 바꿉니다. --main 한 줄이면 충분 */
+:root {
+  --main: #636AC4;   /* 폴더·제목·정답 */
+  --sky: #8AB0D8;    /* 짝수 번호 원·알약 */
+  --sun: #F5B942;    /* 홀수 번호 원·알약 */
+  --gray: #C8C8C8;   /* 회색 탭·알약 */
+  --bad: #B4533F;    /* 오답(벽돌색) */
+  --bg: #EDEDED;     /* 바탕 */
+  --card: #FFFFFF;   /* 흰 카드 */
+  --pill: #EAEAEC;   /* 보기 줄 */
+  --ink: #1D1D1F;    /* 글자 */
+  --mut: #66666B;    /* 흐린 글자 */
+  --line: #DCDCDF;   /* 구분선 */
+  --tint: #E5E7F6;   /* 정답 줄 바탕 */
+  --badtint: #F7E7E2; /* 오답 줄 바탕 */
+  --sans: Pretendard, "Pretendard Variable",
+    "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", system-ui, sans-serif;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 var(--sans);
+  -webkit-text-size-adjust: 100%; }
+
+/* 폴더: 왼쪽 탭 + 오른쪽 색 탭 3개 + 몸통 */
+.folder { max-width: 460px; margin: 0 auto;
+  padding: 14px 10px 28px; }
+.ears { display: flex; height: 30px;
+  align-items: flex-end;
+  justify-content: space-between; }
+.tab { position: relative; height: 30px;
+  padding: 0 6px 0 16px; line-height: 31px;
+  background: var(--main); color: #fff;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .02em; white-space: nowrap;
+  border-radius: 16px 0 0 0;
+  font-variant-numeric: tabular-nums; }
+.tab::after { content: ""; position: absolute;
+  left: calc(100% - 1px); top: 0;
+  width: 30px; height: 100%;
+  background: var(--main);
+  clip-path: polygon(0 0, 28% 0,
+    100% 100%, 0 100%); }
+.chips { display: flex; height: 15px;
+  margin-right: 12px; overflow: hidden;
+  border-radius: 7px 7px 0 0; }
+.chips i { width: 30px; background: var(--gray); }
+.chips i:nth-child(2) { background: var(--sky); }
+.chips i:nth-child(3) { background: var(--sun); }
+.body { padding: 8px; background: var(--main);
+  border-radius: 0 20px 20px 20px; }
+.sheet { min-height: 430px;
+  padding: 28px 16px 22px;
+  background: var(--card);
+  border-radius: 14px; }
+section { animation: in .3s var(--ease) both; }
+[hidden] { display: none !important; }
+
+/* 글자: 두 색 큰 제목, 회색 부제, 점 소제목 */
+h1 { margin: 6px 0 12px; text-align: center;
+  font-size: clamp(32px, 11.5vw, 46px);
+  font-weight: 700; line-height: 1.14;
+  letter-spacing: -.035em;
+  word-break: keep-all; }
+h1 .c, .c { color: var(--main); }
+.lead { margin: 0 auto; max-width: 30em;
+  text-align: center; color: var(--mut);
+  font-size: 14px; word-break: keep-all; }
+.rule { height: 1px; margin: 20px 0;
+  border: 0; background: var(--line); }
+h3 { margin: 0 0 10px; text-align: center;
+  font-size: 17px; font-weight: 700;
+  letter-spacing: -.01em; }
+h3::before, #msg b::before { content: "";
+  display: inline-block; width: 9px;
+  height: 9px; margin-right: 7px;
+  border-radius: 50%; background: var(--sun);
+  vertical-align: .08em; }
+
+/* 알약 줄 + 번호 원 (보기·단계·목록 공통) */
+.opt { display: flex; align-items: center;
+  gap: 10px; width: 100%; min-height: 46px;
+  margin: 8px 0 0; padding: 8px 14px 8px 9px;
+  border: 0; border-radius: 23px;
+  background: var(--pill); color: var(--ink);
+  font: inherit; font-size: 15px;
+  font-weight: 600; line-height: 1.35;
+  text-align: left; word-break: keep-all;
+  overflow-wrap: anywhere;
+  transition: background-color .15s,
+    transform .15s var(--ease); }
+button, label.opt { cursor: pointer;
+  -webkit-tap-highlight-color: transparent; }
+button.opt:active, .btn:active {
+  transform: scale(.985); }
+.opt > span:nth-child(2) { flex: 1; }
+.num { flex: none; width: 28px; height: 28px;
+  border-radius: 50%; background: var(--sun);
+  font-size: 13px; font-weight: 700;
+  line-height: 28px; text-align: center;
+  font-variant-numeric: tabular-nums; }
+.opt:nth-child(even) > .num,
+.opt.alt > .num { background: var(--sky); }
+.opt em { flex: none; font-style: normal;
+  font-size: 12px; font-weight: 700; }
+.opt.right { background: var(--tint);
+  box-shadow: inset 0 0 0 2px var(--main); }
+.opt.right > .num { background: var(--main);
+  color: #fff; }
+.opt.right em { color: var(--main); }
+.opt.miss { background: var(--badtint);
+  box-shadow: inset 0 0 0 2px var(--bad); }
+.opt.miss > .num { background: var(--bad);
+  color: #fff; }
+.opt.miss em { color: var(--bad); }
+.opt:disabled { cursor: default;
+  transform: none; }
+.opt.dim { color: var(--mut); }
+.opt.wait > .num { background: var(--gray); }
+
+/* 큰 단추: 채운 것, 선만 있는 것 */
+.btn { display: block; width: 100%;
+  min-height: 50px; margin: 14px 0 0;
+  padding: 12px 18px; border: 0;
+  border-radius: 25px; background: var(--main);
+  color: #fff; font: inherit; font-weight: 700;
+  transition: transform .15s var(--ease); }
+.btn.ghost { background: var(--card);
+  color: var(--main);
+  box-shadow: inset 0 0 0 2px var(--main); }
+.btn:disabled { background: var(--pill);
+  color: var(--mut); box-shadow: none;
+  cursor: default; }
+.btn small { display: block; font-size: 12px;
+  font-weight: 500; opacity: .9; }
+button:focus-visible, a:focus-visible,
+.hide:focus-visible + label {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px; }
+.hide { position: absolute; width: 1px;
+  height: 1px; opacity: 0; overflow: hidden; }
+
+/* 안내·오류 글 */
+.hint { margin: 10px 0 0; text-align: center;
+  color: var(--mut); font-size: 13px;
+  word-break: keep-all; }
+.hint.bad, #err { padding: 10px 14px;
+  border-radius: 12px; text-align: left;
+  background: var(--badtint); color: var(--bad);
+  font-weight: 600; }
+#err { margin: 0 0 16px; font-size: 14px; }
+#err:empty { display: none; }
+
+/* 해시태그 알약 */
+.tags { display: flex; flex-wrap: wrap;
+  gap: 6px; justify-content: center;
+  margin-top: 14px; }
+.tag { padding: 5px 12px; border-radius: 99px;
+  background: var(--sky); font-size: 13px;
+  font-weight: 600; white-space: nowrap;
+  font-variant-numeric: tabular-nums; }
+.tag:nth-child(2) { background: var(--sun); }
+.tag:nth-child(3) { background: var(--gray); }
+
+/* 문제 화면 */
+.qno { margin: 0 0 8px; text-align: center;
+  color: var(--main); font-size: 13px;
+  font-weight: 700; letter-spacing: .04em; }
+#q { margin: 0; text-align: center;
+  font-size: 21px; font-weight: 700;
+  line-height: 1.42; letter-spacing: -.02em;
+  word-break: keep-all;
+  overflow-wrap: anywhere; }
+.track { height: 3px; margin: 18px 0 14px;
+  background: var(--line); overflow: hidden;
+  border-radius: 2px; }
+.track i { display: block; height: 100%;
+  width: 0; background: var(--main);
+  transition: width .4s var(--ease); }
+.track.busy i { width: 35%;
+  animation: slide 1.4s linear infinite; }
+#msg { margin: 18px 0 0; text-align: center; }
+#msg b { display: block; font-size: 17px;
+  color: var(--main); }
+#msg b::before { background: var(--main); }
+#msg.no b { color: var(--bad); }
+#msg.no b::before { background: var(--bad); }
+#msg span { display: block; margin-top: 4px;
+  color: var(--mut); font-size: 14.5px;
+  word-break: keep-all; }
+
+/* 결과 화면 */
+.bubble { display: block; width: 34px;
+  margin: 0 auto 2px; fill: var(--sky); }
+.bubble circle { fill: #fff; }
+.big { margin: 2px 0 0; text-align: center;
+  font-size: clamp(54px, 20vw, 76px);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums; }
+.note { margin: 8px 0 0; padding: 12px 14px;
+  border-radius: 14px; background: var(--pill);
+  font-size: 14.5px; word-break: keep-all;
+  overflow-wrap: anywhere; }
+.note b { display: block; margin-bottom: 4px;
+  font-size: 15px; }
+.note .mine { color: var(--bad);
+  font-weight: 600; }
+.note .ans { color: var(--main);
+  font-weight: 600; }
+.note .why, .empty { color: var(--mut); }
+.empty { margin: 0; text-align: center;
+  font-size: 14px; }
+.rank small { display: block;
+  color: var(--bad); font-size: 12px;
+  font-weight: 700; }
+.go::after { content: "\2192"; flex: none;
+  color: var(--main); font-weight: 700; }
+.done { margin: 8px 0 0; text-align: center;
+  font-size: 14px; }
+.done .note { font-size: 13.5px;
+  font-variant-numeric: tabular-nums; }
+a { color: var(--main); font-weight: 700; }
+@keyframes in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes slide {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(290%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  section, .track.busy i { animation: none; }
+  .track i, .opt, .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="folder">
+<div class="ears">
+  <span class="tab" id="tab">CBT 퀴즈</span>
+  <span class="chips"><i></i><i></i><i></i></span>
+</div>
+<div class="body"><main class="sheet">
+<p id="err" role="alert"></p>
+
+<!-- 첫 화면: 유인물로 만들기 / 지금 문제로 -->
+<section id="home">
+  <h1><span class="c">유인물로</span><br>
+    CBT 퀴즈</h1>
+  <p class="lead">유인물을 올리면 AI가
+    4지선다 10문제를 만들어요.</p>
+  <hr class="rule">
+  <h3>내 유인물로 문제 만들기</h3>
+  <input type="file" id="file" class="hide"
+    accept=".pdf,.txt,image/*"
+    onchange="pickFile(this.files[0])">
+  <label class="opt" for="file">
+    <span class="num">1</span>
+    <span id="fname">파일 고르기</span></label>
+  <button class="btn" id="mk"
+    onclick="makeQuiz()">문제 만들기</button>
+  <p class="hint" id="hint" aria-live="polite">PDF · 사진 · TXT,
+    15MB까지</p>
+  <hr class="rule">
+  <button class="btn ghost" id="st" disabled
+    onclick="begin()">지금 문제로 시작
+    <small id="cnt">문제를 불러오는 중</small>
+  </button>
+  <div class="tags"><span class="tag">#PDF</span>
+    <span class="tag">#사진</span>
+    <span class="tag">#TXT</span></div>
+</section>
+
+<!-- 만드는 중 -->
+<section id="make" hidden>
+  <h1 id="mkt"><span class="c">문제를</span><br>
+    만드는 중</h1>
+  <p class="lead" id="mks">AI가 유인물을 읽고
+    문제를 만들어요. 보통 20~40초 걸려요.</p>
+  <div class="track busy" id="mkbar"><i></i></div>
+  <div class="opt right" id="s1">
+    <span class="num">1</span>
+    <span>파일 읽기</span><em>완료</em></div>
+  <div class="opt" id="s2">
+    <span class="num">2</span>
+    <span>AI가 문제 만들기</span>
+    <em id="sec">0초</em></div>
+  <div class="opt wait dim" id="s3">
+    <span class="num">3</span>
+    <span>Quiz 탭에 적기</span><em></em></div>
+  <p class="hint" id="mkh"></p>
+</section>
+
+<!-- 문제 -->
+<section id="play" hidden>
+  <p class="qno" id="no"></p>
+  <h2 id="q"></h2>
+  <div class="track"><i id="bar"></i></div>
+  <div id="ch"></div>
+  <p id="msg" aria-live="polite"></p>
+  <button class="btn" id="go" hidden
+    onclick="goNext()">다음 문제</button>
+  <button class="btn" id="rs" hidden
+    onclick="showResult()">내 결과 보기</button>
+</section>
+
+<!-- 결과 -->
+<section id="res" hidden>
+  <svg class="bubble" viewBox="0 0 34 30"
+    aria-hidden="true"><path d="M17 1C8 1 1 6.6
+    1 13.5c0 4 2.4 7.6 6.2 9.8L6 29l6.6-3.4c1.4.3
+    2.9.4 4.4.4 9 0 16-5.6 16-12.5S26 1 17 1z"/>
+    <circle cx="10.5" cy="13.5" r="1.9"/>
+    <circle cx="17" cy="13.5" r="1.9"/>
+    <circle cx="23.5" cy="13.5" r="1.9"/></svg>
+  <p class="lead">이번 점수</p>
+  <p class="big"><span class="c" id="sc"></span>
+    / <span id="tot"></span></p>
+  <div class="tags" id="tags"></div>
+  <hr class="rule">
+  <div id="out"></div>
+  <hr class="rule">
+  <h3>다음에 할 일</h3>
+  <button class="opt go" onclick="makeDoc()">
+    <span class="num">1</span>
+    <span>복습 문서 만들기</span></button>
+  <div id="doc" class="done"></div>
+  <button class="opt go alt"
+    onclick="regExam()">
+    <span class="num">2</span>
+    <span>시험 일정 등록</span></button>
+  <div id="exam" class="done"></div>
+  <button class="btn ghost" onclick="home()">
+    처음 화면으로</button>
+</section>
+</main></div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const MAX_MB = 15;
+const NO_EXT = /\.(docx?|hwpx?)$/i;
+const PDF_TIP = 'PDF로 저장해서 올려 주세요'
+  + '(한글: 파일 → PDF로 저장하기, '
+  + '워드: 다른 이름으로 저장 → PDF)';
+const VIEWS = ['home', 'make', 'play', 'res'];
+let quiz = [], n = 0, score = 0, mine = [];
+let pending = 0, ended = false, asked = false;
+let file = null, timer = 0;
+loadQuiz(ready);
+
+// 서버에서 Quiz 탭 문제를 읽어 옵니다
+function loadQuiz(then, onFail) {
+  google.script.run
+    .withSuccessHandler(then)
+    .withFailureHandler(onFail || noQuiz)
+    .getQuiz();
+}
+
+// 화면 하나만 보이게 하고 탭 글자를 바꿉니다
+function view(id, tab) {
+  VIEWS.forEach(v => { $(v).hidden = v !== id; });
+  $('tab').textContent = tab || 'CBT 퀴즈';
+  $('err').textContent = '';
+  window.scrollTo(0, 0);
+}
+
+// 서버 오류 글 앞의 'Error: '를 떼고 보여 줍니다
+function why(e) {
+  return String(e.message || e)
+    .replace(/^\w*(Error|Exception):\s*/, '');
+}
+// 오류가 나면 카드 맨 위에 이유를 보여 줍니다
+function fail(e) {
+  $('err').textContent = '오류: ' + why(e);
+  window.scrollTo(0, 0);
+}
+
+// 첫 화면: 지금 있는 문제 수를 알려 줍니다
+function ready(data) {
+  quiz = data;
+  $('st').disabled = quiz.length === 0;
+  $('cnt').textContent = quiz.length > 0
+    ? 'Quiz 탭 ' + quiz.length + '문제'
+    : 'Quiz 탭에 문제가 없습니다';
+}
+// 문제를 못 읽으면 시작 단추를 잠급니다
+function noQuiz(e) {
+  quiz = [];
+  $('st').disabled = true;
+  $('cnt').textContent = why(e);
+}
+
+// 첫 화면 안내 글(붉은색이면 오류)
+function hint(text, bad) {
+  $('hint').textContent = text;
+  $('hint').className = bad ? 'hint bad' : 'hint';
+}
+
+// 파일 종류(mime)를 알아냅니다. 모르면 빈 글자
+function mimeOf(f) {
+  if (/\.pdf$/i.test(f.name)
+    || f.type === 'application/pdf') return 'application/pdf';
+  if (/\.txt$/i.test(f.name)
+    || f.type === 'text/plain') return 'text/plain';
+  return /^image\/(png|jpeg|webp|heic|heif)$/
+    .test(f.type) ? f.type : '';
+}
+
+// 파일을 고르면 종류와 크기를 검사합니다
+function pickFile(f) {
+  file = null;
+  $('fname').textContent = '파일 고르기';
+  if (!f) return;
+  if (!f.size) return hint('빈 파일입니다', true);
+  if (NO_EXT.test(f.name)) return hint(PDF_TIP, true);
+  if (!mimeOf(f)) return hint(
+    'PDF · 사진 · TXT 파일만 올릴 수 있어요', true);
+  if (f.size > MAX_MB * 1048576) return hint(
+    '파일이 ' + MAX_MB + 'MB보다 큽니다. '
+    + '쪽을 나누거나 용량을 줄여 주세요', true);
+  file = f;
+  $('fname').textContent = f.name;
+  hint('준비됐어요. [문제 만들기]를 누르세요');
+}
+
+// 파일을 글자(base64)로 바꿔 서버에 보냅니다
+function makeQuiz() {
+  if (!file) return hint(
+    '먼저 [파일 고르기]를 눌러 주세요', true);
+  const f = file, rd = new FileReader();
+  rd.onerror = () => makeFail(
+    { message: '파일을 읽지 못했습니다' });
+  rd.onload = () => {
+    const b64 = String(rd.result).split(',')[1];
+    google.script.run
+      .withSuccessHandler(made)
+      .withFailureHandler(makeFail)
+      .makeQuizFromFile(b64, mimeOf(f));
+  };
+  waitView();
+  rd.readAsDataURL(f);
+}
+
+// 만드는 중 화면을 켜고 초를 셉니다
+function waitView() {
+  let s = 0;
+  view('make', '만드는 중');
+  $('mkt').innerHTML =
+    '<span class="c">문제를</span><br>만드는 중';
+  $('mks').hidden = false;
+  $('mkbar').className = 'track busy';
+  $('mkbar').firstElementChild.style.width = '';
+  $('s2').className = 'opt';
+  $('s3').className = 'opt wait dim';
+  $('s3').lastElementChild.textContent = '';
+  $('sec').textContent = '0초';
+  $('mkh').textContent =
+    '화면을 닫지 말고 기다려 주세요.';
+  clearInterval(timer);
+  timer = setInterval(() => {
+    $('sec').textContent = (++s) + '초';
+  }, 1000);
+}
+
+// 다 만들면 개수를 알리고 1번 문제로 갑니다
+function made(count) {
+  clearInterval(timer);
+  $('mkt').innerHTML = '<span class="c">'
+    + Number(count) + '문제를</span><br>만들었어요';
+  $('mks').hidden = true;
+  $('tab').textContent = '완료';
+  $('mkh').textContent =
+    '곧 1번 문제가 시작됩니다.';
+  $('mkbar').className = 'track';
+  $('mkbar').firstElementChild.style.width = '100%';
+  ['s2', 's3'].forEach(id => {
+    $(id).className = 'opt right';
+    $(id).lastElementChild.textContent = '완료';
+  });
+  resetFile();
+  loadQuiz(data => {
+    ready(data);
+    setTimeout(begin, 1300);
+  }, e => { // 다시 읽기에 실패하면 첫 화면으로
+    noQuiz(e); view('home'); hint(why(e), true);
+  });
+}
+
+// 만들다 실패하면 첫 화면에서 이유를 보여 줍니다
+function makeFail(e) {
+  clearInterval(timer);
+  view('home');
+  hint(why(e), true);
+}
+function resetFile() {
+  file = null;
+  $('file').value = '';
+  $('fname').textContent = '파일 고르기';
+  hint('PDF · 사진 · TXT, ' + MAX_MB + 'MB까지');
+}
+
+// 1번 문제부터 새로 시작합니다
+function begin() {
+  if (quiz.length === 0) return;
+  n = 0; score = 0; mine = [];
+  ended = false; asked = false;
+  $('rs').hidden = true;
+  show();
+}
+
+// 지금 문제와 보기 버튼을 화면에 그립니다
+function show() {
+  const it = quiz[n];
+  view('play', '문제 ' + (n + 1)
+    + ' / ' + quiz.length);
+  $('no').textContent = '문제 ' + (n + 1);
+  $('bar').style.width =
+    (n / quiz.length * 100) + '%';
+  $('q').textContent = it.q;
+  $('msg').textContent = '';
+  $('go').hidden = true;
+  $('ch').innerHTML = '';
+  it.ch.forEach((c, k) => addBtn(c, k + 1));
+}
+
+// 보기 버튼 하나를 만들어 붙입니다
+function addBtn(text, no) {
+  const b = add($('ch'), 'button', '', 'opt');
+  add(b, 'span', no, 'num');
+  add(b, 'span', text);
+  b.onclick = () => pick(no);
+}
+
+// 보기를 누르면 맞았는지 알려 줍니다
+function pick(no) {
+  const it = quiz[n];
+  document.querySelectorAll('#ch button')
+    .forEach((b, i) => {
+      b.disabled = true;
+      if (i + 1 === it.ans) mark(b, 'right', '정답');
+      else if (i + 1 === no) mark(b, 'miss', '내 답');
+      else b.className = 'opt dim';
+    });
+  if (no === it.ans) {
+    score++;
+    notice('', '정답', it.exp);
+  } else { wrong(it, no); }
+  $('go').textContent = n + 1 < quiz.length
+    ? '다음 문제' : '채점하기';
+  $('go').hidden = false;
+}
+
+// 보기 줄에 색과 꼬리표(정답·내 답)를 붙입니다
+function mark(b, cls, label) {
+  b.className = 'opt ' + cls;
+  add(b, 'em', label);
+}
+
+// 알림 자리에 제목 줄과 설명을 넣습니다
+function notice(cls, head, text) {
+  const m = $('msg');
+  m.className = cls;
+  m.textContent = '';
+  add(m, 'b', head);
+  add(m, 'span', text);
+}
+
+// 다음 문제로 넘어가고, 끝나면 결과를 부릅니다
+function goNext() {
+  n++;
+  if (n < quiz.length) return show();
+  view('play', '채점');
+  $('no').textContent = '끝';
+  $('bar').style.width = '100%';
+  $('q').textContent = '점수 ' + score
+    + ' / ' + quiz.length;
+  $('ch').innerHTML = '';
+  $('msg').textContent = '';
+  $('go').hidden = true;
+  ended = true;
+  $('rs').hidden = false;
+  if (pending === 0) showResult();
+}
+
+// 오답이면 정답을 알리고 시트에 저장합니다
+function wrong(it, no) {
+  mine.push({ q: it.q, mine: no,
+    answer: it.ans, why: it.exp });
+  notice('no', '오답', '정답은 ' + it.ans
+    + '번. ' + it.exp);
+  pending++;
+  google.script.run.withSuccessHandler(saved)
+    .withFailureHandler(e => {
+      saved(); fail(e);
+    })
+    .saveWrong(n, no);
+}
+
+// 저장이 다 끝나면 결과 화면을 보여 줍니다
+function saved() {
+  pending--;
+  if (ended && pending === 0) showResult();
+}
+
+// 서버에서 결과를 받아 화면에 그립니다
+function showResult() {
+  if (asked) return; // 두 번 그리지 않게
+  asked = true;
+  google.script.run.withSuccessHandler(draw)
+    .withFailureHandler(e => {
+      asked = false; fail(e);
+    }).getResult();
+}
+
+// 태그 하나를 만들어 글자(textContent)를 넣습니다
+function add(box, tag, text, cls) {
+  const e = document.createElement(tag);
+  e.textContent = text;
+  if (cls) e.className = cls;
+  box.appendChild(e);
+  return e;
+}
+
+// 점수·알약·틀린 문제·TOP3 를 그립니다
+function draw(r) {
+  const o = $('out'), t = $('tags');
+  const my = ended;
+  const sc = my ? score : r.score;
+  const tot = my ? quiz.length : r.total;
+  const wr = my ? mine : r.wrongs;
+  const pct = tot ? Math.round(sc / tot * 100) : 0;
+  view('res', '결과');
+  o.innerHTML = ''; t.innerHTML = '';
+  $('sc').textContent = sc;
+  $('tot').textContent = tot;
+  add(t, 'span', '#정답률 ' + pct + '%', 'tag');
+  add(t, 'span', '#틀린 문제 ' + wr.length, 'tag');
+  add(t, 'span', '#총 ' + tot + '문제', 'tag');
+  add(o, 'h3', '틀린 문제 ' + wr.length + '개');
+  if (!wr.length) add(o, 'p',
+    '모두 맞았어요', 'empty');
+  wr.forEach(w => wrongCard(o, w));
+  add(o, 'hr', '', 'rule');
+  add(o, 'h3', '가장 자주 틀린 문제 TOP3');
+  const list = add(o, 'div', '');
+  if (!r.top3.length) add(list, 'p',
+    '아직 오답 기록이 없어요', 'empty');
+  r.top3.forEach((x, i) => rankCard(list, x, i));
+}
+
+// 틀린 문제 한 개를 카드로 그립니다
+function wrongCard(o, w) {
+  const c = add(o, 'div', '', 'note');
+  const it = quiz.find(x => x.q === w.q);
+  const say = no => no + '번'
+    + (it ? ' ' + it.ch[no - 1] : '');
+  add(c, 'b', w.q);
+  add(c, 'div', '내 답: ' + say(w.mine), 'mine');
+  add(c, 'div', '정답: ' + say(w.answer), 'ans');
+  add(c, 'div', '해설: ' + w.why, 'why');
+}
+
+// 자주 틀린 문제 한 줄(순위, 틀린 횟수, 문제)
+function rankCard(o, t, i) {
+  const c = add(o, 'div', '', 'opt rank');
+  add(c, 'span', i + 1, 'num');
+  const box = add(c, 'span', '');
+  add(box, 'small', t.n + '번 틀림');
+  add(box, 'span', t.q);
+}
+
+// 복습 문서를 만들고 링크를 보여 줍니다
+function makeDoc() {
+  if ($('doc').textContent === '만드는 중...') return;
+  $('doc').textContent = '만드는 중...';
+  google.script.run.withFailureHandler(e => {
+      $('doc').textContent = ''; fail(e);
+    })
+    .withSuccessHandler(url => {
+      $('doc').textContent = '';
+      const a = add($('doc'), 'a',
+        '복습 문서 열기');
+      if (/^https:/.test(url)) a.href = url;
+      a.target = '_blank';
+    }).makeReviewDocUrl();
+}
+
+// 시험 일정을 등록하고 날짜 목록을 보여 줍니다
+function regExam() {
+  if ($('exam').textContent === '등록 중...') return;
+  $('exam').textContent = '등록 중...';
+  google.script.run.withFailureHandler(e => {
+      $('exam').textContent = ''; fail(e);
+    })
+    .withSuccessHandler(list => {
+      $('exam').textContent = '';
+      list.forEach(t =>
+        add($('exam'), 'div', t, 'note'));
+    }).addExamEvents();
+}
+
+// 결과 화면에서 첫 화면으로 돌아갑니다
+function home() {
+  ended = false; // 늦게 끝난 저장이 결과로 끌고 가지 않게
+  $('doc').textContent = '';
+  $('exam').textContent = '';
+  view('home');
+}
+</script>
+</body>
+</html>

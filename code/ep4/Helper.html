@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta name="viewport"
+ content="width=device-width,
+ initial-scale=1">
+<style>
+:root{--ink:#1A1A1A;--sub:#555;--mut:#6B6B6B;
+ --blue:#1F4E9A;--mark:#FFE066;
+ --paper:#F4F3EE;--line:rgba(26,26,26,.12);
+ --ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box}
+body{margin:0;padding:24px 20px 48px;
+ background:var(--paper);color:var(--ink);
+ font:18px/1.5 "Apple SD Gothic Neo",
+ "Malgun Gothic",sans-serif}
+main{max-width:880px;margin:0 auto}
+h1{font-size:32px;font-weight:600;
+ line-height:1.2;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 20px}
+.meta{color:var(--mut);font-size:16px}
+.bar{display:flex;gap:12px}
+button{flex:1;font:inherit;font-weight:600;
+ padding:16px 20px;border-radius:10px;
+ cursor:pointer;color:var(--ink);
+ background:#fff;border:2px solid var(--ink);
+ transition:background-color .15s var(--ease),
+ transform .15s var(--ease)}
+button:hover{background:#EDECE6}
+button:active{transform:scale(.98)}
+button:focus-visible{outline:3px solid var(--blue);
+ outline-offset:2px}
+button.main{background:var(--blue);
+ border-color:var(--blue);color:#fff}
+button.main:hover{background:#17407E}
+#msg{min-height:28px;margin:16px 0 0}
+.card{background:#fff;padding:20px;
+ border:1px solid var(--line);
+ border-radius:12px;margin:12px 0;
+ animation:in .3s var(--ease) both}
+.line{display:grid;gap:12px;
+ align-items:start;
+ grid-template-columns:1fr 1.2fr 2fr}
+@media (max-width:640px){
+ .line{grid-template-columns:1fr}}
+.f{padding:8px 12px;border-radius:8px}
+.f .meta{display:block}
+.bad{background:var(--mark)}
+.bad .meta{color:var(--ink)}
+.why{font-weight:600;margin-top:4px}
+.stat{display:none}
+#time{font-size:32px;font-weight:600;
+ font-variant-numeric:tabular-nums}
+a{color:var(--blue);font-weight:600}
+#slides div{margin-top:4px}
+@keyframes in{
+ from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){
+ .card{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>발표 도우미</h1>
+<p class="lead">대본을 확인하고 슬라이드를 만듭니다</p>
+<div class="bar">
+<button onclick="load()">대본 불러오기</button>
+<button class="main"
+ onclick="make()">슬라이드 만들기</button>
+</div>
+<p id="msg" class="meta"></p>
+<div id="stat" class="card stat">
+<span class="meta">예상 발표 시간</span>
+<div id="time"></div>
+</div>
+<div id="out"></div>
+<div id="slides"></div>
+</main>
+<script>
+const NAMES = ['제목', '내용', '발표할 말'];
+const run = () => google.script.run
+  .withFailureHandler(
+    e => say('오류: ' + e.message));
+const $ = id => document.getElementById(id);
+const mk = (cls) => {
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  return d;
+};
+function say(t) {
+  $('msg').textContent = t;
+}
+function load() {
+  say('불러오는 중...');
+  run().withSuccessHandler(rows => {
+    run().withSuccessHandler(bad => {
+      draw(rows, bad);
+      run().withSuccessHandler(m => {
+        $('stat').style.display = 'block';
+        $('time').textContent =
+          m.toFixed(1) + '분';
+      }).estimate();
+    }).checkScript();
+  }).loadScript();
+}
+function draw(rows, bad) {
+  const out = $('out');
+  out.textContent = '';
+  rows.forEach((r, i) => {
+    if (r.join('') === '') return;
+    const card = mk('card line');
+    r.forEach((v, j) => {
+      const f = mk('f');
+      const b = bad.find(x =>
+        x.row === i + 2 && x.col === j + 1);
+      const label = mk('meta');
+      label.textContent = NAMES[j];
+      const val = mk();
+      val.textContent = v;
+      f.append(label, val);
+      if (b) {
+        f.className += ' bad';
+        const w = mk('why');
+        w.textContent = '고치기: ' + b.why;
+        f.appendChild(w);
+      }
+      card.appendChild(f);
+    });
+    out.appendChild(card);
+  });
+  say('고칠 칸 ' + bad.length + '개');
+}
+function make() {
+  say('슬라이드 만드는 중...');
+  run().withSuccessHandler(res => {
+    const box = $('slides');
+    box.textContent = '';
+    const card = mk('card');
+    const a = document.createElement('a');
+    a.href = res.url;
+    a.target = '_blank';
+    a.textContent = '슬라이드 열기';
+    card.appendChild(a);
+    res.titles.forEach((t, i) => {
+      const p = mk();
+      p.textContent = (i + 1) + '. ' + t;
+      card.appendChild(p);
+    });
+    box.appendChild(card);
+    say('슬라이드를 만들었습니다');
+  }).makeSlidesUrl();
+}
+</script>
+</body>
+</html>
